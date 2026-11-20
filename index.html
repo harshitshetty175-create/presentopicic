@@ -1,0 +1,1045 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:,">
+<title>FoodFlow — DBMS Presentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080814; --panel:rgba(255,255,255,.045); --panel2:rgba(255,255,255,.07);
+  --line:rgba(255,255,255,.1); --text:#f5f1e8; --muted:#b8b4c7; --muted2:#8f8aa3;
+  --yellow:#ffc531; --orange:#ff7a29; --coral:#ff5a3c; --green:#22c07a; --teal:#14b8a6;
+  --purple:#7c5cff; --pink:#ff5da2;
+  --grad:linear-gradient(92deg,#ffd23f,#ff7a29);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Plus Jakarta Sans",system-ui,sans-serif;overflow:hidden;
+  background-image:radial-gradient(rgba(255,255,255,.13) 1px,transparent 1px);background-size:22px 22px}
+button{font-family:inherit;cursor:pointer;min-height:44px}
+.blob{position:fixed;border-radius:50%;filter:blur(70px);opacity:.55;pointer-events:none;z-index:0}
+.b1{width:520px;height:520px;background:#b34700;top:-180px;left:-140px}
+.b2{width:480px;height:480px;background:#3b1d9e;top:10%;right:-160px}
+.b3{width:420px;height:420px;background:#065f46;bottom:-180px;left:32%}
+.b4{width:300px;height:300px;background:#8a6d00;bottom:-80px;right:12%;opacity:.35}
+.ring{position:fixed;border:2px dashed rgba(255,255,255,.14);border-radius:50%;pointer-events:none;z-index:0}
+.r1{width:340px;height:340px;top:-120px;right:6%}.r2{width:200px;height:200px;bottom:4%;left:3%}
+
+/* top bar */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:30;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;pointer-events:none}
+.brand{pointer-events:auto;display:flex;gap:10px;align-items:center;background:rgba(10,10,20,.65);border:1px solid var(--line);backdrop-filter:blur(10px);padding:8px 14px;border-radius:999px;font-weight:800;font-size:.9rem}
+.brand i{width:30px;height:30px;border-radius:50%;background:var(--grad);display:grid;place-items:center;font-style:normal;font-size:1rem}
+.soundbtn{pointer-events:auto;background:rgba(10,10,20,.7);color:#fff;border:1px solid var(--line);backdrop-filter:blur(10px);border-radius:999px;padding:9px 16px;font-weight:700;font-size:.88rem}
+.progress{position:fixed;top:0;left:0;height:4px;background:var(--grad);z-index:40;transition:width .45s ease;border-radius:0 4px 4px 0}
+
+/* deck */
+.deck{position:relative;z-index:2;height:100vh;height:100dvh}
+.slide{position:absolute;inset:0;display:none;overflow-y:auto;padding:86px 20px 108px;scrollbar-width:thin}
+.slide.active{display:block;animation:in .5s ease both}
+@keyframes in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.slide.active{animation:none}.blob{filter:blur(70px)}}
+.wrap{max-width:1020px;margin:0 auto;text-align:center}
+.wrap.left{text-align:left}
+.pill{display:inline-block;background:var(--yellow);color:#171200;font-weight:900;letter-spacing:.14em;font-size:.72rem;text-transform:uppercase;padding:9px 18px;border-radius:8px 999px 999px 8px;transform:rotate(-1.6deg);box-shadow:0 10px 30px rgba(255,197,49,.25)}
+.pill::before{content:"● "}
+h1{font-size:clamp(3rem,9vw,5.6rem);line-height:.95;margin:18px 0 6px;font-weight:900;letter-spacing:-.03em;text-shadow:5px 5px 0 rgba(255,90,60,.45)}
+h2{font-size:clamp(2rem,6vw,3.4rem);line-height:1.02;margin:14px 0 10px;font-weight:900;letter-spacing:-.025em}
+h2 em{font-style:normal;color:var(--yellow)}
+.script{font-family:Caveat,cursive;color:var(--yellow);font-size:clamp(1.9rem,5.5vw,3.1rem);transform:rotate(-1.5deg);display:block;margin:6px 0 14px}
+.lead{color:var(--muted);font-size:clamp(1rem,2.4vw,1.22rem);line-height:1.65;max-width:760px;margin:0 auto}
+.lead b,.lead strong{color:#fff}
+.kicker{color:var(--muted2);font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;font-weight:800}
+.cta{margin-top:28px;background:var(--grad);border:none;color:#1a1000;font-weight:900;font-size:1.35rem;padding:20px 46px;border-radius:999px;box-shadow:0 18px 50px rgba(255,122,41,.45);transition:transform .15s}
+.cta:hover{transform:scale(1.03)}
+.note{color:var(--muted2);font-size:.86rem;margin-top:22px;line-height:1.6}
+.grid{display:grid;gap:14px;margin-top:26px;text-align:left}
+.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:820px){.g3,.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:540px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:20px}
+.card h3{margin:0 0 8px;font-size:1.08rem}
+.card p,.card li{color:var(--muted);line-height:1.6;font-size:.95rem}
+.card ul{margin:8px 0 0;padding-left:18px}
+.avatar{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:1.3rem;color:#140b00;margin-bottom:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:20px 14px;text-align:center}
+.stat b{font-size:2rem;display:block}
+.stat span{color:var(--muted);font-size:.85rem;font-weight:600}
+.chip{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:.84rem;font-weight:700;margin:3px}
+.mono{font-family:"JetBrains Mono",monospace}
+.code{background:#0d1226;border:1px solid #26305e;border-radius:14px;padding:16px;text-align:left;font-family:"JetBrains Mono",monospace;font-size:.86rem;line-height:1.75;color:#c7d2fe;overflow-x:auto;white-space:pre}
+.code .k{color:#ffcc66}.code .s{color:#7ee2a8}.code .c{color:#6b7394}
+.flow{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;margin-top:22px}
+.flow .step{background:var(--panel2);border:1px solid var(--line);padding:11px 15px;border-radius:999px;font-weight:800;font-size:.9rem}
+.flow .arr{color:var(--yellow);font-weight:900}
+.taprow{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:22px}
+.tap{border:1px solid var(--line);background:var(--panel);color:#fff;border-radius:14px;padding:13px 18px;font-weight:800;font-size:.95rem}
+.tap.sel{background:var(--grad);color:#1a1000;border-color:transparent}
+.detail{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px;text-align:left;min-height:120px}
+.detail h3{margin:0 0 8px}.detail p{color:var(--muted);line-height:1.65;margin:0}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--yellow);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+td{color:var(--muted)}td:first-child{color:#fff;font-weight:700}
+
+/* simulator */
+.sim{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;text-align:left}
+@media(max-width:820px){.sim{grid-template-columns:1fr}}
+.phone{background:linear-gradient(180deg,#1a1408,#120e05);border:2px solid #6b4e12;border-radius:24px;padding:22px}
+.phone .shop{color:var(--yellow);font-weight:900;letter-spacing:.1em;font-size:.8rem}
+.dish{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.05);border-radius:14px;padding:14px;margin-top:14px}
+.stockbar{height:10px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden;margin-top:8px}
+.stockbar i{display:block;height:100%;background:var(--grad);transition:width .6s}
+.simbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.btn{border:none;border-radius:999px;padding:13px 20px;font-weight:900;font-size:.95rem;background:var(--grad);color:#1a1000}
+.btn.ghost{background:transparent;color:#fff;border:1px solid var(--line)}
+.btn.danger{background:linear-gradient(92deg,#ff5a3c,#c81e3a);color:#fff}
+.log{background:#0a0f22;border:1px solid #232c52;border-radius:18px;padding:18px;font-family:"JetBrains Mono",monospace;font-size:.82rem;line-height:1.8;color:#aeb9e8;min-height:230px;white-space:pre-wrap}
+.log .ok{color:#4ade80}.log .bad{color:#fb7185}.log .warn{color:#facc15}
+.kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--line);font-size:.94rem}
+.kv span{color:var(--muted)}.kv b{text-align:right}
+.quiz{text-align:left}
+.quiz label{display:flex;gap:12px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:10px;cursor:pointer;min-height:48px}
+.quiz input{width:20px;height:20px;margin-top:2px;accent-color:var(--orange);flex:none}
+
+/* bottom nav */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 16px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(180deg,transparent,rgba(5,5,12,.92) 35%)}
+.navbtn{background:rgba(15,15,28,.85);color:#fff;border:1px solid var(--line);border-radius:999px;padding:12px 22px;font-weight:800;backdrop-filter:blur(8px)}
+.navbtn.primary{background:var(--grad);color:#1a1000;border:none}
+.navbtn:disabled{opacity:.35;cursor:default}
+.dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:46vw}
+.dot{width:9px;height:9px;min-height:9px;border-radius:50%;border:none;background:rgba(255,255,255,.22);padding:0}
+.dot.on{background:var(--yellow);width:26px;border-radius:99px}
+.counter{color:var(--muted);font-weight:700;font-size:.85rem;white-space:nowrap}
+@media(max-width:640px){.slide{padding-bottom:170px}.dots{max-width:34vw;gap:5px}.dot{width:7px;height:7px;min-height:7px}.dot.on{width:18px}.navbtn{padding:11px 15px;font-size:.9rem}.counter{font-size:.75rem}.hide-mobile{display:none}.cta{font-size:1.15rem;padding:16px 34px;margin-top:20px}}
+.er{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px;text-align:left}
+@media(max-width:820px){.er{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:540px){.er{grid-template-columns:1fr}}
+.erbox{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px}
+.erbox b{color:var(--yellow);display:block;margin-bottom:6px}
+.erbox span{color:var(--muted);font-size:.83rem;line-height:1.55;display:block;font-family:"JetBrains Mono",monospace}
+.heart{font-size:3.4rem;animation:beat 1.1s infinite}
+@keyframes beat{0%,100%{transform:scale(1)}25%{transform:scale(1.14)}}
+@media(prefers-reduced-motion:reduce){.heart{animation:none}}
+/* working pages */
+.workgrid{display:grid;grid-template-columns:1.25fr .85fr;gap:16px;margin-top:22px;text-align:left}
+@media(max-width:860px){.workgrid{grid-template-columns:1fr}}
+.dishcard{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;gap:14px;justify-content:space-between;align-items:center}
+.dishcard b{font-size:1rem}.dishcard p{color:var(--muted);font-size:.86rem;line-height:1.5;margin:4px 0 0}
+.addbtn{border:none;background:var(--grad);color:#1a1000;font-weight:900;border-radius:999px;padding:10px 16px;white-space:nowrap}
+.panelbox{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:20px;text-align:left}
+.panelbox h3{margin:0 0 12px}
+.smallbtn{border:1px solid var(--line);background:var(--panel2);color:#fff;border-radius:999px;padding:8px 14px;font-weight:800;font-size:.85rem;min-height:38px}
+.smallbtn.primary{background:var(--grad);color:#1a1000;border:none}
+.smallbtn:disabled{opacity:.35}
+.track{display:flex;flex-direction:column;gap:0;margin-top:14px}
+.trackstep{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-left:2px solid var(--line);padding-left:18px;position:relative;color:var(--muted);font-weight:700}
+.trackstep::before{content:"";width:14px;height:14px;border-radius:50%;background:#2a2a3d;position:absolute;left:-8px;top:14px;border:2px solid var(--line)}
+.trackstep.done{color:#fff}.trackstep.done::before{background:var(--green);border-color:var(--green)}
+.trackstep.now{color:var(--yellow)}.trackstep.now::before{background:var(--yellow);border-color:var(--yellow)}
+.sqlbox{width:100%;background:#0d1226;border:1px solid #26305e;border-radius:14px;color:#c7d2fe;padding:14px;font-family:"JetBrains Mono",monospace;font-size:.86rem;min-height:88px}
+.msg{font-weight:800;margin-top:12px;line-height:1.5;font-size:.92rem}
+.togglepill{display:inline-flex;gap:8px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 8px 8px 14px;font-weight:800}
+.togglepill i{width:44px;height:24px;border-radius:99px;background:#3a3a4d;display:inline-block;position:relative;font-style:normal}
+.togglepill i::after{content:"";width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:left .2s}
+.togglepill.on i{background:var(--green)}.togglepill.on i::after{left:23px}
+.searchinput{width:100%;background:#0d1226;border:1px solid var(--line);border-radius:12px;color:#fff;padding:12px 14px;font-family:inherit;font-size:.95rem}
+.bars{display:flex;align-items:flex-end;gap:10px;height:150px;margin-top:16px;padding:0 4px}
+.barcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end}
+.bar{width:100%;max-width:52px;border-radius:10px 10px 4px 4px;background:var(--grad);border:none;min-height:18px;transition:height .5s;cursor:pointer}
+.bar.alt{background:linear-gradient(180deg,#14b8a6,#0f766e)}
+.barlbl{color:var(--muted);font-size:.78rem;font-weight:700;text-align:center}
+.favbtn{border:1px solid var(--line);background:var(--panel2);color:#fff;border-radius:999px;padding:9px 14px;font-weight:800}
+.favbtn.loved{background:#3b1220;border-color:#ff5da2;color:#ff8fbe}
+.starbtn{border:none;background:transparent;color:#5a5570;font-size:1.7rem;padding:2px 3px;min-height:40px;line-height:1}
+.starbtn.lit{color:var(--yellow)}
+.notif{display:flex;gap:12px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;text-align:left}
+.notif.unread{border-color:rgba(255,197,49,.55);background:rgba(255,197,49,.07)}
+.notif p{color:var(--muted);margin:2px 0 0;line-height:1.5;font-size:.9rem}
+.notif b{color:#fff}
+.pager{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
+.normtable{font-size:.84rem}
+.normtable td,.normtable th{padding:8px 10px}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div>
+<div class="ring r1"></div><div class="ring r2"></div>
+<div class="progress" id="progress"></div>
+
+<div class="topbar">
+  <div class="brand"><i>🍔</i> FoodFlow <span style="color:var(--muted);font-weight:600">· DBMS Presentation</span></div>
+  <button class="soundbtn" id="soundBtn">🔊 Sound on</button>
+</div>
+
+<main class="deck" id="deck">
+
+<!-- 1 WELCOME -->
+<section class="slide active">
+  <div class="wrap" style="padding-top:6vh">
+    <span class="pill">DBMS · FoodFlow · Project Presentation</span>
+    <h1>Welcome!</h1>
+    <span class="script">"From craving to doorstep — all or nothing."</span>
+    <p class="lead">Today we present <b>FoodFlow</b> — a full-stack food ordering system where one order touches the cart, payment, kitchen, inventory and delivery — and the database makes sure it either happens <b>completely</b>, or <b>not at all</b>.</p>
+    <p style="color:var(--muted);margin-top:22px">Presented by <b style="color:#fff">Harshit</b> · Computer Science &amp; Engineering<br>Dayananda Sagar University · Academic Year 2026–2027</p>
+    <button class="cta" id="startBtn">Let's Start &nbsp;→</button>
+    <p class="note">🔊 Sound on recommended — buttons and the live order demo have sound effects. Mute anytime from the top-right.<br><span class="hide-mobile">Use the arrows, the dots, or your keyboard ← → keys to move through the presentation.</span></p>
+  </div>
+</section>
+
+<!-- 2 OVERVIEW -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">DBMS · FoodFlow · Overview</span>
+    <h2>FoodFlow <em>DBMS</em></h2>
+    <span class="script">"A real app, on a real database."</span>
+    <p class="lead">An advanced online food ordering, restaurant operations, inventory and delivery management system — built on <b>Next.js 15 + MySQL 8</b>, with every screen powered by real database records, not hardcoded data.</p>
+    <div class="grid g4">
+      <div class="stat"><b>21</b><span>MySQL tables in food_ordering_db</span></div>
+      <div class="stat"><b>4</b><span>Roles — Customer, Restaurant, Delivery, Super Admin</span></div>
+      <div class="stat"><b>50</b><span>Food items across 5 restaurants &amp; 10 categories</span></div>
+      <div class="stat"><b>44 / 44</b><span>Tests passed · TypeScript 0 errors · 45 pages built</span></div>
+    </div>
+    <div style="margin-top:20px">
+      <span class="chip">Next.js 15 · App Router</span><span class="chip">TypeScript</span><span class="chip">MySQL 8 · InnoDB</span><span class="chip">Prisma ORM</span><span class="chip">Tailwind CSS</span><span class="chip">Framer Motion</span><span class="chip">Recharts</span><span class="chip">bcrypt + JWT cookies</span>
+    </div>
+    <div class="grid g3">
+      <div class="card"><h3>🛒 It orders</h3><p>Discovery → menu → cart → checkout → payment → kitchen → delivery → review. The complete lifecycle, end to end.</p></div>
+      <div class="card"><h3>🗄️ It proves DBMS</h3><p>Normalised schema, transactions, ACID, concurrency control, views, stored procedures and a full DBMS Lab.</p></div>
+      <div class="card"><h3>🔒 It protects</h3><p>Server-side pricing, role checks on every route, read-only SQL playground and simulated payments — clearly labelled.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 JOURNEY -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Start the journey</span>
+    <h2>One journey. <em>Twelve working pages.</em></h2>
+    <p class="lead">Follow a single FoodFlow order through the whole system — then try the app itself: cart, kitchen, delivery, admin, SQL, normalisation, transactions, reviews and notifications — or jump using the dots below.</p>
+    <div class="flow">
+      <span class="step">1 · The Problem</span><span class="arr">→</span>
+      <span class="step">2 · One Order = One Transaction</span><span class="arr">→</span>
+      <span class="step">3 · Four Roles</span><span class="arr">→</span>
+      <span class="step">4 · 21 Tables</span><span class="arr">→</span>
+      <span class="step">5 · ER &amp; Relationships</span><span class="arr">→</span>
+      <span class="step">6 · ACID</span><span class="arr">→</span>
+      <span class="step">7 · Live Order Demo</span><span class="arr">→</span>
+      <span class="step">8 · Working App Pages</span><span class="arr">→</span>
+      <span class="step">9 · DBMS Lab</span><span class="arr">→</span>
+      <span class="step">10 · Wrap-up</span>
+    </div>
+    <div class="grid g2">
+      <div class="card"><h3>The order lifecycle — 7 states</h3><p>Placed → Confirmed → Preparing → Ready for Pickup → Picked Up → Out for Delivery → Delivered. Every jump is validated on the server — a Placed order can never skip straight to Delivered, and every change is written to <span class="mono">Order_Status_History</span>.</p></div>
+      <div class="card"><h3>Seeded with real-shaped data</h3><p>43 users · 5 restaurants · 10 categories · 50 food items · 30 orders · 66 order items · 30 payments · 27 deliveries — all related through foreign keys, all queryable in the Lab.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 PROBLEM -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Stop 1 · The problem it solves</span>
+    <h2>The order that <em>half-happened</em></h2>
+    <p class="lead">A customer orders the <b>last Paneer Tikka</b>. The payment is recorded — then the app crashes before the order and stock update are saved. Money taken, no food, stock still showing available. The next customer orders the same last piece too.</p>
+    <div class="grid g3">
+      <div class="card"><h3 style="color:#7ee2a8">Payment saved ✓</h3><p><span class="mono">Payments</span> row created — ₹349 recorded as paid.</p></div>
+      <div class="card"><h3 style="color:#fb7185">Order lost ✕</h3><p>No row in <span class="mono">Orders</span> or <span class="mono">Order_Items</span>. The kitchen never sees it.</p></div>
+      <div class="card"><h3 style="color:#fb7185">Stock wrong ✕</h3><p><span class="mono">Inventory</span> still shows 1 left — so it gets sold <b>again</b>. Overselling.</p></div>
+    </div>
+    <p class="lead" style="margin-top:20px">The database is left <b>inconsistent</b> — and this is exactly what Transaction Management in FoodFlow prevents.</p>
+    <div class="grid g3">
+      <div class="card"><h3>It manages</h3><p>Every checkout from <b>BEGIN</b> to <b>COMMIT</b> — or <b>ROLLBACK</b> if anything fails.</p></div>
+      <div class="card"><h3>It protects</h3><p>The database stays consistent through crashes, failures and many users ordering at the same time.</p></div>
+      <div class="card"><h3>It guarantees</h3><p><b>All or Nothing</b> — order, payment and stock change together, or none of them do.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 TRANSACTION -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Stop 2 · The unit of work</span>
+    <h2>One order = <em>one transaction</em></h2>
+    <p class="lead">Placing an order is a single logical unit of work. Tap each step to see what the database actually does — prices are always recalculated on the server, never trusted from the browser.</p>
+    <div class="taprow" id="txTabs">
+      <button class="tap sel">1 · Begin</button>
+      <button class="tap">2 · Validate</button>
+      <button class="tap">3 · Recalculate</button>
+      <button class="tap">4 · Reserve stock</button>
+      <button class="tap">5 · Order + Payment</button>
+      <button class="tap">6 · Commit</button>
+    </div>
+    <div class="detail" id="txDetail"></div>
+    <div class="code" style="margin-top:16px"><span class="k">BEGIN TRANSACTION;</span>
+  <span class="c">-- 1. check stock with a conditional update (no overselling)</span>
+  <span class="k">UPDATE</span> Inventory <span class="k">SET</span> stock = stock - 1
+   <span class="k">WHERE</span> food_item_id = 12 <span class="k">AND</span> stock &gt;= 1;
+  <span class="c">-- 2. order + items (with price snapshots) + payment, together</span>
+  <span class="k">INSERT INTO</span> Orders ...;  <span class="k">INSERT INTO</span> Order_Items ...;
+  <span class="k">INSERT INTO</span> Payments (method, status, reference)
+   <span class="k">VALUES</span> (<span class="s">'UPI_SIMULATED'</span>, <span class="s">'SUCCESS'</span>, <span class="s">'SIM-…'</span>);
+<span class="k">COMMIT;</span>  <span class="c">-- any failure anywhere → ROLLBACK everything</span></div>
+    <p class="note">An idempotency key on checkout means a double-tap or a retry can never create the same order twice.</p>
+  </div>
+</section>
+
+<!-- 6 ROLES -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Stop 3 · Four roles, one database</span>
+    <h2>Four portals. <em>One transaction.</em></h2>
+    <p class="lead">Like a transaction, FoodFlow works as one unit — each role completes one part of it. Tap a role to see its portal.</p>
+    <div class="taprow" id="roleTabs">
+      <button class="tap sel">🧑 Customer</button>
+      <button class="tap">👨‍🍳 Restaurant Admin</button>
+      <button class="tap">🛵 Delivery Partner</button>
+      <button class="tap">🛡️ Super Admin</button>
+    </div>
+    <div class="detail" id="roleDetail"></div>
+    <p class="note">Authorisation is enforced on the server for every protected operation — never just by hiding a menu. Demo logins (local only, password <span class="mono">Demo@1234</span>): customer@ · restaurant@ · delivery@ · admin@foodflow.in</p>
+  </div>
+</section>
+
+<!-- 7 TABLES -->
+<section class="slide">
+  <div class="wrap left">
+    <div style="text-align:center"><span class="kicker">Stop 4 · Database architecture</span>
+    <h2><em>food_ordering_db</em> — 21 tables</h2>
+    <p class="lead">MySQL 8 · InnoDB · normalised to 3NF, with primary keys, foreign keys, UNIQUE &amp; CHECK constraints, indexes, and DECIMAL for money. Order items store price snapshots, so old orders stay correct even after a menu price changes.</p></div>
+    <div class="card" style="margin-top:22px;padding:6px 18px;overflow-x:auto">
+    <table>
+      <tr><th>Group</th><th>Tables</th><th>What they hold</th></tr>
+      <tr><td>People</td><td class="mono">Users · Addresses · Restaurant_Admins · Delivery_Partners</td><td>Accounts, roles, saved addresses, partner profiles</td></tr>
+      <tr><td>Catalogue</td><td class="mono">Restaurants · Categories · Food_Items · Inventory</td><td>Menus, prices, availability and live stock</td></tr>
+      <tr><td>Ordering</td><td class="mono">Carts · Cart_Items · Orders · Order_Items</td><td>One-restaurant cart rule, orders with price snapshots</td></tr>
+      <tr><td>Money &amp; Delivery</td><td class="mono">Payments · Deliveries · Coupons · Coupon_Usage</td><td>Simulated payments, assignment &amp; timestamps, discounts</td></tr>
+      <tr><td>Trust &amp; History</td><td class="mono">Reviews · Favourites · Notifications · Order_Status_History · Audit_Logs</td><td>Feedback, alerts, full status trail and audit trail</td></tr>
+    </table>
+    </div>
+    <div style="text-align:center;margin-top:16px"><span class="chip">21 tables</span><span class="chip">Foreign keys with explicit ON DELETE / UPDATE</span><span class="chip">created_at · updated_at</span><span class="chip">Prisma migrations are the source of truth</span></div>
+  </div>
+</section>
+
+<!-- 8 ER -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Stop 5 · Design / Diagram</span>
+    <h2>ER diagram — <em>who connects to whom</em></h2>
+    <p class="lead">The core relationships of FoodFlow. One customer places many orders; one order has many items; every delivery and payment belongs to exactly one order.</p>
+    <div class="er">
+      <div class="erbox"><b>USERS 1 — N ORDERS</b><span>user_id (PK) → Orders.user_id (FK)<br>One customer, many orders</span></div>
+      <div class="erbox"><b>RESTAURANTS 1 — N FOOD_ITEMS</b><span>restaurant_id (PK) → Food_Items.restaurant_id (FK)</span></div>
+      <div class="erbox"><b>ORDERS 1 — N ORDER_ITEMS</b><span>order_id (PK) → Order_Items.order_id (FK)<br>Items keep name + price snapshots</span></div>
+      <div class="erbox"><b>ORDERS 1 — 1 PAYMENTS</b><span>order_id unique in Payments<br>Amount · method · SIM reference · status</span></div>
+      <div class="erbox"><b>ORDERS 1 — 1 DELIVERIES</b><span>partner_id (FK) · pickup &amp; delivery timestamps</span></div>
+      <div class="erbox"><b>USERS M — N FOOD_ITEMS</b><span>Through Favourites &amp; Reviews<br>junction tables resolve the many-to-many</span></div>
+      <div class="erbox"><b>CATEGORIES 1 — N FOOD_ITEMS</b><span>category_id (FK) · 10 categories, 50 dishes</span></div>
+      <div class="erbox"><b>COUPONS 1 — N COUPON_USAGE</b><span>usage tracked per user + order, so a coupon can't be reused silently</span></div>
+      <div class="erbox"><b>ORDERS 1 — N STATUS_HISTORY</b><span>Every status change logged with timestamp — the audit trail of an order</span></div>
+    </div>
+    <p class="note">Normalisation in one line: no repeating groups (1NF) → no partial dependencies (2NF) → no transitive dependencies (3NF). Restaurant details live once, in Restaurants — never copied into every order.</p>
+  </div>
+</section>
+
+<!-- 9 ACID -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Stop 6 · The four promises</span>
+    <h2>ACID, <em>the FoodFlow way</em></h2>
+    <p class="lead">Four guarantees that make a transaction trustworthy. Tap each letter — every one is mapped to a real FoodFlow behaviour.</p>
+    <div class="taprow" id="acidTabs">
+      <button class="tap sel">A · Atomicity</button>
+      <button class="tap">C · Consistency</button>
+      <button class="tap">I · Isolation</button>
+      <button class="tap">D · Durability</button>
+    </div>
+    <div class="detail" id="acidDetail"></div>
+    <div class="grid g2">
+      <div class="card"><h3>Concurrency — the last-item race</h3><p>Two customers, one Paneer Tikka left. A conditional update — <span class="mono">UPDATE … WHERE stock &gt;= 1</span> — lets exactly one succeed. The other gets a clean "out of stock". No overselling, ever. Try it in the live demo next.</p></div>
+      <div class="card"><h3>Recovery</h3><p>InnoDB's redo and undo logs let MySQL redo committed orders and undo uncommitted ones after a crash — so a power cut mid-checkout can never leave a half-order behind.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 SIMULATOR -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Stop 7 · The live demo</span>
+    <h2>Order Simulator — <em>watch a transaction live</em></h2>
+    <p class="lead">Spice Route has <b>1 Paneer Tikka left</b>. Run the order the normal way — then run it again and make the payment fail mid-transaction, and watch the rollback save the stock.</p>
+    <div class="sim">
+      <div class="phone">
+        <div class="shop">FOODFLOW · SPICE ROUTE</div>
+        <div class="dish"><div><b>Paneer Tikka</b><br><span style="color:var(--muted);font-size:.88rem">₹349 · Serves 1 · Veg</span></div><b style="font-size:1.2rem">₹349</b></div>
+        <div style="margin-top:16px"><span style="color:var(--muted);font-size:.88rem">Stock remaining</span><b style="float:right" id="stockLabel">1</b><div class="stockbar"><i id="stockBar" style="width:20%"></i></div></div>
+        <div class="kv"><span>Order status</span><b id="simOrder">Not placed</b></div>
+        <div class="kv"><span>Payment (simulated UPI)</span><b id="simPay">—</b></div>
+        <div class="kv"><span>Transaction state</span><b id="simState">Not started</b></div>
+        <div class="simbtns">
+          <button class="btn" id="simNormal">▶ Place order — normal run</button>
+          <button class="btn danger" id="simFail">⚡ Payment fails mid-way</button>
+          <button class="btn ghost" id="simReset">↺ Reset</button>
+        </div>
+      </div>
+      <div>
+        <div class="log" id="simLog">· Transaction log will appear here, step by step…</div>
+        <div class="grid g2" style="margin-top:14px">
+          <div class="card"><h3>Normal run ends…</h3><p>Stock <b style="color:#fff">0</b>, order <b style="color:#fff">Placed</b>, payment recorded — state <b style="color:#4ade80">Committed</b>. Everything changed together.</p></div>
+      <div class="card"><h3>Failure run ends…</h3><p>Stock restored to <b style="color:#fff">1</b>, no order, no payment — state <b style="color:#fb7185">Aborted</b>. All or nothing.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKING PAGE 1: BROWSE & CART -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Working page 1 · Customer app</span>
+    <h2>Browse, add to cart — <em>try it live</em></h2>
+    <p class="lead">This is how the customer side of FoodFlow works. Add dishes, change quantities, try the coupon — and try adding from a second restaurant to see the <b>one-restaurant cart rule</b> in action.</p>
+    <div class="workgrid">
+      <div>
+        <div class="grid" style="margin-top:0;gap:12px">
+          <div class="dishcard"><div><b>🍛 Paneer Tikka — ₹349</b><p>Spice Route · Veg · ⭐ 4.6 · Smoky, char-grilled</p></div><button class="addbtn" data-add="Paneer Tikka|349|Spice Route">+ Add</button></div>
+          <div class="dishcard"><div><b>🍗 Butter Chicken — ₹399</b><p>Spice Route · Non-veg · ⭐ 4.8 · Creamy tomato gravy</p></div><button class="addbtn" data-add="Butter Chicken|399|Spice Route">+ Add</button></div>
+          <div class="dishcard"><div><b>🍚 Veg Biryani — ₹279</b><p>Spice Route · Veg · ⭐ 4.5 · Dum-cooked, serves 1</p></div><button class="addbtn" data-add="Veg Biryani|279|Spice Route">+ Add</button></div>
+          <div class="dishcard"><div><b>🥞 Masala Dosa — ₹149</b><p>Dosa Junction · Veg · ⭐ 4.7 · Crisp, with sambar &amp; chutney</p></div><button class="addbtn" data-add="Masala Dosa|149|Dosa Junction">+ Add</button></div>
+          <div class="dishcard"><div><b>🍔 Classic Burger — ₹199</b><p>Burger Barn · Non-veg · ⭐ 4.4 · Cheese, fries extra</p></div><button class="addbtn" data-add="Classic Burger|199|Burger Barn">+ Add</button></div>
+        </div>
+        <p class="msg" id="cartMsg" style="color:var(--yellow)"></p>
+      </div>
+      <div class="panelbox">
+        <h3>🛒 Your Cart <span style="color:var(--muted);font-size:.85rem" id="cartRest"></span></h3>
+        <div id="cartItems"><p style="color:var(--muted)">Cart is empty — add a dish to start. This writes to <span class="mono">Carts</span> + <span class="mono">Cart_Items</span> in the real app.</p></div>
+        <div style="display:flex;gap:8px;margin-top:14px"><input id="couponInput" placeholder="Try WELCOME10" style="flex:1;background:#0d1226;border:1px solid var(--line);border-radius:10px;color:#fff;padding:10px 12px;font-family:inherit;min-width:0"><button class="smallbtn primary" id="couponBtn">Apply</button></div>
+        <div class="kv"><span>Subtotal</span><b id="ctSub">₹0</b></div>
+        <div class="kv"><span>Delivery fee</span><b id="ctDel">₹0</b></div>
+        <div class="kv"><span>Tax (5%)</span><b id="ctTax">₹0</b></div>
+        <div class="kv"><span>Coupon discount</span><b id="ctDisc" style="color:#4ade80">− ₹0</b></div>
+        <div class="kv" style="border:none;font-size:1.05rem"><span style="color:#fff;font-weight:800">Total</span><b id="ctTotal">₹0</b></div>
+        <button class="btn" id="clearCartBtn" style="width:100%;margin-top:10px;background:transparent;color:#fff;border:1px solid var(--line)">Clear cart</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKING PAGE 2: CHECKOUT & TRACKING -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Working page 2 · Checkout &amp; tracking</span>
+    <h2>Checkout — <em>then watch it move</em></h2>
+    <p class="lead">Pick an address and a payment method, place the order, and watch the <b>7-state order lifecycle</b> advance — every state change is logged in <span class="mono">Order_Status_History</span>.</p>
+    <div class="workgrid">
+      <div class="panelbox">
+        <h3>📍 Delivery address</h3>
+        <div class="quiz">
+          <label><input type="radio" name="addr" checked> Home — 12, MG Road, Bengaluru 560001</label>
+          <label><input type="radio" name="addr"> Hostel — DSU Campus, Hosur Road</label>
+        </div>
+        <h3 style="margin-top:20px">💳 Payment method</h3>
+        <div class="quiz">
+          <label><input type="radio" name="paym" checked> Cash on Delivery</label>
+          <label><input type="radio" name="paym"> UPI — <b>Simulated</b> (no real money)</label>
+          <label><input type="radio" name="paym"> Card — <b>Simulated</b> (no card data stored)</label>
+        </div>
+        <div class="kv" style="margin-top:14px"><span>Order total (2 items from cart demo)</span><b>₹777 incl. delivery &amp; tax</b></div>
+        <button class="btn" id="trackPlaceBtn" style="width:100%;margin-top:14px">Place Order →</button>
+        <button class="btn ghost" id="trackResetBtn" style="width:100%;margin-top:8px">Reset tracking</button>
+        <p class="msg" id="trackMsg"></p>
+      </div>
+      <div class="panelbox">
+        <h3>🚦 Order <span id="trackOrderId">#—</span> status</h3>
+        <div class="track" id="trackSteps">
+          <div class="trackstep">Placed</div><div class="trackstep">Confirmed by restaurant</div><div class="trackstep">Preparing</div><div class="trackstep">Ready for pickup</div><div class="trackstep">Picked up</div><div class="trackstep">Out for delivery</div><div class="trackstep">Delivered 🎉</div>
+        </div>
+        <div class="log" id="trackLog" style="min-height:110px;margin-top:14px">Place the order to see status-history rows being written…</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKING PAGE 3: RESTAURANT KITCHEN -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Working page 3 · Restaurant admin</span>
+    <h2>Kitchen board — <em>run Spice Route</em></h2>
+    <p class="lead">The restaurant portal in miniature: accept incoming orders, move them through preparation, and keep an eye on inventory before it runs out.</p>
+    <div class="grid g3">
+      <div class="stat"><b id="kitchenOrders">3</b><span>Incoming orders today</span></div>
+      <div class="stat"><b id="kitchenRevenue">₹0</b><span>Revenue from orders you complete here</span></div>
+      <div class="stat"><b id="kitchenLow">1 item</b><span>Low-stock warning</span></div>
+    </div>
+    <div class="workgrid">
+      <div>
+        <div class="grid" style="margin-top:0;gap:12px" id="kitchenList">
+          <div class="panelbox" data-kitchen="31"><h3>Order #31 — Paneer Tikka ×1 · ₹349</h3><p style="color:var(--muted)">Status: <b class="kstatus" style="color:var(--yellow)">New</b></p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="smallbtn primary" data-kact="accept">✓ Accept</button><button class="smallbtn" data-kact="prep">Start preparing</button><button class="smallbtn" data-kact="ready">Mark ready</button></div></div>
+          <div class="panelbox" data-kitchen="32"><h3>Order #32 — Butter Chicken ×2 · ₹798</h3><p style="color:var(--muted)">Status: <b class="kstatus" style="color:var(--yellow)">New</b></p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="smallbtn primary" data-kact="accept">✓ Accept</button><button class="smallbtn" data-kact="prep">Start preparing</button><button class="smallbtn" data-kact="ready">Mark ready</button></div></div>
+          <div class="panelbox" data-kitchen="33"><h3>Order #33 — Veg Biryani ×1 · ₹279</h3><p style="color:var(--muted)">Status: <b class="kstatus" style="color:var(--yellow)">New</b></p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="smallbtn primary" data-kact="accept">✓ Accept</button><button class="smallbtn" data-kact="prep">Start preparing</button><button class="smallbtn" data-kact="ready">Mark ready</button></div></div>
+        </div>
+      </div>
+      <div class="panelbox">
+        <h3>📦 Inventory — live stock</h3>
+        <div id="invList"></div>
+        <p class="msg" id="invMsg" style="color:#facc15">⚠ Paneer is low — restock before the dinner rush.</p>
+        <p style="color:var(--muted);font-size:.88rem;line-height:1.6">In the real app every change writes an inventory movement record, and the conditional update prevents overselling.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKING PAGE 4: DELIVERY PARTNER -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Working page 4 · Delivery partner</span>
+    <h2>Delivery board — <em>one run, start to finish</em></h2>
+    <p class="lead">Go online, accept the assignment, and complete the run in the only order the system allows. Skipping a step is rejected — just like the real status-transition checks.</p>
+    <div style="margin-top:20px"><button class="togglepill on" id="availBtn">Available for deliveries <i></i></button></div>
+    <div class="workgrid">
+      <div class="panelbox">
+        <h3>🛵 Assigned: Order #31 — Spice Route → MG Road</h3>
+        <p style="color:var(--muted);line-height:1.6">Distance 3.2 km · Customer: Harshit · Payment: Simulated UPI (already paid)</p>
+        <div class="track" id="delSteps">
+          <div class="trackstep">Assignment received</div><div class="trackstep">Accepted</div><div class="trackstep">Picked up from restaurant</div><div class="trackstep">Out for delivery</div><div class="trackstep">Delivered 🎉</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
+          <button class="smallbtn primary" id="delAccept">Accept</button>
+          <button class="smallbtn" id="delPickup" disabled>Confirm pickup</button>
+          <button class="smallbtn" id="delOut" disabled>Out for delivery</button>
+          <button class="smallbtn" id="delDone" disabled>Mark delivered</button>
+          <button class="smallbtn" id="delReset">Reset</button>
+        </div>
+        <p class="msg" id="delMsg"></p>
+      </div>
+      <div>
+        <div class="grid g2" style="margin-top:0">
+          <div class="stat"><b id="delCount">0</b><span>Deliveries completed here</span></div>
+          <div class="stat"><b id="delEarn">₹0</b><span>Earnings in this demo (₹60 / run)</span></div>
+        </div>
+        <div class="panelbox" style="margin-top:14px"><h3>🕘 Delivery history</h3><div id="delHistory"><p style="color:var(--muted)">Nothing yet — complete a run and it appears here, with pickup &amp; delivery timestamps in <span class="mono">Deliveries</span>.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKING PAGE 5: SQL PLAYGROUND -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Working page 5 · DBMS Lab</span>
+    <h2>SQL Playground — <em>run a real query shape</em></h2>
+    <p class="lead">Pick a sample query and run it against the seeded data shape — or type your own. SELECT runs; anything destructive is <b>blocked</b>, exactly like the read-only playground in FoodFlow.</p>
+    <div class="taprow" id="sqlTabs">
+      <button class="tap sel">Popular dishes</button><button class="tap">Restaurant sales</button><button class="tap">Monthly revenue</button><button class="tap">Top customers</button>
+    </div>
+    <textarea class="sqlbox" id="sqlInput" style="margin-top:16px">SELECT item_name, SUM(quantity) AS sold, SUM(quantity*price) AS revenue FROM Order_Items GROUP BY item_name ORDER BY revenue DESC LIMIT 5;</textarea>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap"><button class="btn" id="sqlRun">▶ Run query</button><button class="btn danger" id="sqlTryDelete">Try a DELETE — see what happens</button></div>
+    <p class="msg" id="sqlMsg"></p>
+    <div class="panelbox" style="margin-top:8px;overflow-x:auto"><div id="sqlResult"><p style="color:var(--muted)">Results will appear here…</p></div></div>
+  </div>
+</section>
+
+<!-- WORKING PAGE 6: CONCURRENCY RACE -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Working page 6 · Concurrency</span>
+    <h2>The last-item race — <em>two customers, one dish</em></h2>
+    <p class="lead">Only <b>1 Paneer Tikka</b> is left and two customers tap “Order” at the same moment. Run the race and watch the conditional update decide — only one can win.</p>
+    <div class="grid g2" style="text-align:center">
+      <div class="panelbox" style="text-align:center"><div style="font-size:2.4rem">🧑</div><h3>Customer A</h3><p id="raceA" style="color:var(--muted);font-weight:700">Waiting to order…</p></div>
+      <div class="panelbox" style="text-align:center"><div style="font-size:2.4rem">👩</div><h3>Customer B</h3><p id="raceB" style="color:var(--muted);font-weight:700">Waiting to order…</p></div>
+    </div>
+    <div class="panelbox" style="text-align:center;margin-top:14px">
+      <b style="font-size:1.1rem">Stock remaining: <span id="raceStock" style="color:var(--yellow)">1</span></b>
+      <div class="stockbar" style="max-width:420px;margin:12px auto"><i id="raceBar" style="width:20%"></i></div>
+      <div class="code" style="max-width:640px;margin:0 auto">UPDATE Inventory SET stock = stock - 1
+WHERE food_item_id = 12 AND stock &gt;= 1;
+-- Winner: 1 row affected ✓ · Loser: 0 rows → clean rollback</div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap"><button class="btn" id="raceRun">⚡ Both order at the same time</button><button class="btn ghost" id="raceReset">↺ Restock &amp; reset</button></div>
+      <p class="msg" id="raceMsg"></p>
+    </div>
+  </div>
+</section>
+
+<!-- WORKING PAGE 7: SUPER ADMIN -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Working page 7 · Super Admin</span>
+    <h2>Admin dashboard — <em>the whole platform</em></h2>
+    <p class="lead">Everything the Super Admin sees in FoodFlow, from live queries — not hardcoded cards. Search the orders, filter by status, and tap a bar to inspect a day.</p>
+    <div class="grid g4">
+      <div class="stat"><b>43</b><span>Users · 25 customers</span></div>
+      <div class="stat"><b>5</b><span>Restaurants live</span></div>
+      <div class="stat"><b id="admOrderCount">30</b><span>Orders in view</span></div>
+      <div class="stat"><b>₹21,170</b><span>Gross order value (seed)</span></div>
+    </div>
+    <div class="workgrid">
+      <div class="panelbox">
+        <h3>📊 Daily orders — last 7 days</h3>
+        <div class="bars" id="admBars"></div>
+        <p class="msg" id="admBarMsg" style="color:var(--yellow)">Tap a bar — this is a GROUP BY DATE query in the real app.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <button class="smallbtn primary" data-admfilter="all">All</button>
+          <button class="smallbtn" data-admfilter="Delivered">Delivered</button>
+          <button class="smallbtn" data-admfilter="Preparing">Preparing</button>
+          <button class="smallbtn" data-admfilter="Cancelled">Cancelled</button>
+        </div>
+      </div>
+      <div class="panelbox">
+        <h3>🔎 Orders — search &amp; manage</h3>
+        <input class="searchinput" id="admSearch" placeholder="Search by customer, restaurant or #id…">
+        <div style="overflow-x:auto;margin-top:12px"><table><thead><tr><th>Order</th><th>Customer</th><th>Restaurant</th><th>Total</th><th>Status</th></tr></thead><tbody id="admTable"></tbody></table></div>
+        <p style="color:var(--muted);font-size:.86rem;line-height:1.6;margin-top:10px">In the real dashboard this table has sorting, pagination, date filters and CSV export — all backed by <span class="mono">Orders JOIN Users JOIN Restaurants</span>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKING PAGE 8: TABLE EXPLORER -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Working page 8 · DBMS Lab</span>
+    <h2>Table Explorer — <em>browse real records</em></h2>
+    <p class="lead">Pick a table and page through its records — with its keys and relationships shown, exactly like the Table Explorer in FoodFlow's DBMS Lab.</p>
+    <div class="taprow" id="tblTabs">
+      <button class="tap sel">Users</button><button class="tap">Orders</button><button class="tap">Food_Items</button><button class="tap">Payments</button>
+    </div>
+    <div class="detail" id="tblMeta" style="min-height:86px"></div>
+    <div class="panelbox" style="margin-top:14px;overflow-x:auto"><div id="tblBody"></div>
+      <div class="pager"><button class="smallbtn" id="tblPrev">← Prev page</button><span class="counter" id="tblPageLbl"></span><button class="smallbtn" id="tblNext">Next page →</button></div>
+    </div>
+    <p class="note">Row counts from the seed: 43 users · 30 orders · 50 food items · 30 payments. Columns, PK / FK and types come from MySQL metadata in the real Lab — never typed by hand.</p>
+  </div>
+</section>
+
+<!-- WORKING PAGE 9: NORMALISATION -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Working page 9 · Normalisation explorer</span>
+    <h2>From messy to 3NF — <em>step through it</em></h2>
+    <p class="lead">One badly-designed order row, cleaned up step by step. Tap each normal form and watch the redundancy and the anomalies disappear.</p>
+    <div class="taprow" id="normTabs">
+      <button class="tap sel">✕ Unnormalised</button><button class="tap">1NF</button><button class="tap">2NF</button><button class="tap">3NF ✓</button>
+    </div>
+    <div class="detail" id="normDetail"></div>
+    <div class="panelbox" style="margin-top:14px;overflow-x:auto"><div id="normTable"></div></div>
+    <div class="grid g3">
+      <div class="card"><h3>Update anomaly</h3><p id="normAnom1">Restaurant phone stored on every order row — change it in one place, miss it in 29 others.</p></div>
+      <div class="card"><h3>Insert anomaly</h3><p id="normAnom2">Can't add a new restaurant until someone orders from it first.</p></div>
+      <div class="card"><h3>Delete anomaly</h3><p id="normAnom3">Delete the only order for a dish and the dish itself vanishes.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKING PAGE 10: TRANSACTION LAB / SAVEPOINT -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Working page 10 · Transaction Lab</span>
+    <h2>SAVEPOINT — <em>undo half, keep half</em></h2>
+    <p class="lead">A full transaction is not the only option. Set a <b>savepoint</b>, try something risky, and roll back <em>only</em> to that point — the earlier work survives. Drive it yourself:</p>
+    <div class="sim">
+      <div class="phone">
+        <div class="shop">FOODFLOW · TRANSACTION LAB</div>
+        <div class="kv"><span>Transaction</span><b id="spState">Not started</b></div>
+        <div class="kv"><span>Order row</span><b id="spOrder">—</b></div>
+        <div class="kv"><span>Coupon applied</span><b id="spCoupon">—</b></div>
+        <div class="kv"><span>Payment row</span><b id="spPay">—</b></div>
+        <div class="kv"><span>Stock (Paneer Tikka)</span><b id="spStock">5</b></div>
+        <div class="simbtns">
+          <button class="btn" id="spBegin">1 · BEGIN</button>
+          <button class="btn ghost" id="spSave">2 · Create order + SAVEPOINT</button>
+          <button class="btn ghost" id="spRisk">3 · Try coupon + payment</button>
+          <button class="btn danger" id="spRollback">↩ ROLLBACK TO SAVEPOINT</button>
+          <button class="btn" id="spCommit">✓ COMMIT</button>
+          <button class="btn ghost" id="spReset">↺ Reset</button>
+        </div>
+        <p class="msg" id="spMsg"></p>
+      </div>
+      <div><div class="log" id="spLog">SQL will appear here as you drive the transaction…</div>
+      <div class="card" style="margin-top:14px"><h3>Why this matters in FoodFlow</h3><p>The real checkout uses one atomic transaction — but the Lab's Transaction Simulator isolates demo records so students can practise COMMIT, ROLLBACK and SAVEPOINT without ever touching a live customer order.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKING PAGE 11: FAVOURITES & REVIEWS -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Working page 11 · Customer profile</span>
+    <h2>Favourites &amp; reviews — <em>your taste, saved</em></h2>
+    <p class="lead">The profile side of FoodFlow: heart a dish to save it in <span class="mono">Favourites</span>, and review a delivered order — the average rating updates live, like the real aggregate query.</p>
+    <div class="workgrid">
+      <div>
+        <div class="grid" style="margin-top:0;gap:12px">
+          <div class="dishcard"><div><b>🍛 Paneer Tikka — Spice Route</b><p>⭐ <span data-avg="Paneer Tikka">4.6</span> · <span data-cnt="Paneer Tikka">15</span> reviews</p></div><button class="favbtn" data-fav="Paneer Tikka">♡ Save</button></div>
+          <div class="dishcard"><div><b>🍗 Butter Chicken — Spice Route</b><p>⭐ <span data-avg="Butter Chicken">4.8</span> · <span data-cnt="Butter Chicken">18</span> reviews</p></div><button class="favbtn" data-fav="Butter Chicken">♡ Save</button></div>
+          <div class="dishcard"><div><b>🥞 Masala Dosa — Dosa Junction</b><p>⭐ <span data-avg="Masala Dosa">4.7</span> · <span data-cnt="Masala Dosa">20</span> reviews</p></div><button class="favbtn" data-fav="Masala Dosa">♡ Save</button></div>
+        </div>
+        <div class="panelbox" style="margin-top:14px"><h3>❤️ Your favourites (<span id="favCount">0</span>)</h3><div id="favList"><p style="color:var(--muted)">None yet — tap ♡ Save on a dish. This is a Users M—N Food_Items junction table.</p></div></div>
+        <div class="panelbox" style="margin-top:14px"><h3>🕘 Recent orders</h3><p style="color:var(--muted);line-height:1.7">#33 · Veg Biryani · ₹279 · Delivered ✓<br>#29 · Butter Chicken ×2 · ₹798 · Delivered ✓<br>#24 · Masala Dosa · ₹149 · Delivered ✓</p></div>
+      </div>
+      <div class="panelbox">
+        <h3>⭐ Review Order #33 — Veg Biryani</h3>
+        <div id="starRow">
+          <button class="starbtn" data-star="1">★</button><button class="starbtn" data-star="2">★</button><button class="starbtn" data-star="3">★</button><button class="starbtn" data-star="4">★</button><button class="starbtn" data-star="5">★</button>
+        </div>
+        <p style="color:var(--muted);font-size:.88rem" id="starLbl">Tap a star rating</p>
+        <textarea class="sqlbox" id="reviewText" placeholder="How was it? (writes to Reviews in the real app)" style="min-height:70px"></textarea>
+        <button class="btn" id="reviewSubmit" style="width:100%;margin-top:12px">Submit review →</button>
+        <p class="msg" id="reviewMsg"></p>
+        <h3 style="margin-top:18px">Latest reviews</h3>
+        <div id="reviewList">
+          <p style="color:var(--muted);line-height:1.6"><b style="color:#fff">Aarav ★★★★★</b> — “Biryani was hot and fragrant.”<br><b style="color:#fff">Priya ★★★★☆</b> — “Great taste, delivery took a while.”</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKING PAGE 12: NOTIFICATIONS -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Working page 12 · Notifications &amp; real-time</span>
+    <h2>Notifications — <em>every event, persisted</em></h2>
+    <p class="lead">In FoodFlow every important event is <b>saved in MySQL first</b>, then pushed live when real-time is connected — with a refresh fallback. Fire the events and watch the feed:</p>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:20px">
+      <button class="smallbtn primary" data-notif="order">🛎 New order placed</button>
+      <button class="smallbtn" data-notif="accept">👨‍🍳 Restaurant accepted</button>
+      <button class="smallbtn" data-notif="pickup">🛵 Picked up</button>
+      <button class="smallbtn" data-notif="delivered">🎉 Delivered</button>
+      <button class="smallbtn" data-notif="payment">💳 Payment confirmed</button>
+    </div>
+    <div class="workgrid">
+      <div class="panelbox">
+        <h3>🔔 Notification centre <span id="notifBadge" style="background:var(--coral);color:#fff;border-radius:999px;padding:2px 10px;font-size:.8rem">0 unread</span></h3>
+        <div style="display:grid;gap:10px" id="notifFeed">
+          <div class="notif"><div style="font-size:1.4rem">👋</div><div><b>Welcome to FoodFlow</b><p>Your notifications will appear here — newest first, stored in the Notifications table.</p></div></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="smallbtn primary" id="notifRead">Mark all as read</button><button class="smallbtn" id="notifClear">Clear feed</button></div>
+      </div>
+      <div>
+        <div class="grid g2" style="margin-top:0">
+          <div class="stat"><b id="notifTotal">1</b><span>Notifications in feed</span></div>
+          <div class="stat"><b id="notifUnreadStat">0</b><span>Unread</span></div>
+        </div>
+        <div class="card" style="margin-top:14px"><h3>How it works in the project</h3><p>Order placed → a row is inserted into <span class="mono">Notifications</span> for the restaurant. Status changes add rows for the customer and delivery partner. Persist-first means nothing is lost if the live connection drops — the feed is correct on the next load.</p></div>
+        <div class="card" style="margin-top:14px"><h3>Honest scope</h3><p>FoodFlow persists notifications and shows them on load / navigation. It does not claim Socket.IO push — that distinction is stated in the project itself.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 LAB -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Stop 9 · DBMS Lab &amp; Advanced SQL</span>
+    <h2>The Lab — <em>where the DBMS is proved</em></h2>
+    <p class="lead">A dedicated module inside FoodFlow for academic demonstration — running on real metadata and real records.</p>
+    <div class="grid g3">
+      <div class="card"><h3>🔍 SQL Playground</h3><p>Read-only by design: SELECT only, enforced server-side with row limits and timeouts. A DELETE is blocked — not just hidden.</p></div>
+      <div class="card"><h3>📊 Table Explorer &amp; Reports</h3><p>Browse actual records with keys and types, plus daily orders, restaurant sales, popular foods and monthly revenue reports.</p></div>
+      <div class="card"><h3>🧪 Simulators</h3><p>Transaction simulator (COMMIT / ROLLBACK / SAVEPOINT), ACID demos, normalisation explorer and the two-customers-one-item concurrency test.</p></div>
+      <div class="card"><h3>Views × 4</h3><p class="mono" style="font-size:.86rem">customer_order_history · restaurant_sales · popular_food_items · monthly_revenue</p></div>
+      <div class="card"><h3>Stored Procedures × 2</h3><p class="mono" style="font-size:.86rem">GetCustomerOrderHistory · GetRestaurantRevenueReport</p></div>
+      <div class="card"><h3>Query Gallery</h3><p>JOINs, GROUP BY &amp; HAVING, aggregates, subqueries — with destructive examples explained safely, never run on live orders.</p></div>
+    </div>
+    <div class="code" style="margin-top:18px"><span class="c">-- Try this in the playground: which dish earns the most?</span>
+<span class="k">SELECT</span> item_name, <span class="k">SUM</span>(quantity) <span class="k">AS</span> sold, <span class="k">SUM</span>(quantity * price) <span class="k">AS</span> revenue
+<span class="k">FROM</span> Order_Items <span class="k">GROUP BY</span> item_name <span class="k">ORDER BY</span> revenue <span class="k">DESC</span> <span class="k">LIMIT</span> 5;</div>
+  </div>
+</section>
+
+<!-- 12 WRAP -->
+<section class="slide">
+  <div class="wrap">
+    <span class="kicker">Stop 10 · Wrap-up</span>
+    <h2>All or nothing — <em>that's the whole idea</em></h2>
+    <p class="lead">An order is one unit of work. It flows through seven states, protected by the four ACID guarantees — and it either commits completely, or it rolls back completely. Nothing in between, ever.</p>
+    <div class="grid g3">
+      <div class="card"><h3>Remember 1</h3><p><b style="color:#fff">Transaction</b> = one logical unit of work: Begin → operations → Commit, or Rollback.</p></div>
+      <div class="card"><h3>Remember 2</h3><p><b style="color:#fff">21 tables, 3NF</b> — one fact in one place, joined by foreign keys, priced by snapshots.</p></div>
+      <div class="card"><h3>Remember 3</h3><p><b style="color:#fff">ACID + conditional stock updates</b> — the reason the last Paneer Tikka can only ever be sold once.</p></div>
+    </div>
+    <div class="card quiz" style="margin-top:16px">
+      <h3>Quick check — for the class</h3>
+      <p style="color:var(--muted)">Q. Payment succeeds but the order insert fails. What happens to the payment?</p>
+      <label><input type="radio" name="q1" data-ok="0"> It stays — the customer paid, so keep it</label>
+      <label><input type="radio" name="q1" data-ok="1"> The whole transaction rolls back — payment, order and stock are all undone</label>
+      <label><input type="radio" name="q1" data-ok="0"> Only the stock is restored manually later</label>
+      <p id="quizMsg" style="font-weight:800;margin-top:12px"></p>
+    </div>
+    <div style="margin-top:26px">
+      <div class="heart">🍔</div>
+      <h2 style="margin-top:6px">Thank you!</h2>
+      <p class="lead">Every good transaction ends the same way — <b>committed</b>. Ours ends with a thank-you, and we're happy to take your questions.</p>
+      <p style="color:var(--muted);margin-top:14px">— Harshit · CSE, Dayananda Sagar University · 2026–2027 —<br><span style="font-size:.88rem">Verified: build passed · 44/44 tests · MySQL 8 with 21 tables · simulated payments clearly labelled SIM- · no real money, no card data stored</span></p>
+      <button class="btn" style="margin-top:16px" id="restartBtn">↺ Restart presentation</button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<nav class="nav">
+  <button class="navbtn" id="prevBtn">← Prev</button>
+  <div style="text-align:center"><div class="dots" id="dots"></div><div class="counter" id="counter" style="margin-top:6px"></div></div>
+  <button class="navbtn primary" id="nextBtn">Next →</button>
+</nav>
+
+<script>
+var slides=[].slice.call(document.querySelectorAll('.slide')), cur=0, sound=true, AC=null;
+var dotsEl=document.getElementById('dots');
+slides.forEach(function(_,i){var d=document.createElement('button');d.className='dot';d.setAttribute('aria-label','Go to slide '+(i+1));d.onclick=function(){go(i)};dotsEl.appendChild(d)});
+function beep(f,dur,type){if(!sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();var o=AC.createOscillator(),g=AC.createGain();o.type=type||'sine';o.frequency.value=f||660;g.gain.setValueAtTime(.12,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+(dur||.12));o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+(dur||.12))}catch(e){}}
+function toggleSound(){sound=!sound;document.getElementById('soundBtn').textContent=sound?'🔊 Sound on':'🔇 Sound off';if(sound)beep(880,.15)}
+function render(){slides.forEach(function(s,i){s.classList.toggle('active',i===cur);if(i===cur)s.scrollTop=0});
+  document.getElementById('progress').style.width=((cur+1)/slides.length*100)+'%';
+  document.getElementById('counter').textContent=(cur+1)+' / '+slides.length+'  ·  FoodFlow DBMS';
+  document.getElementById('prevBtn').disabled=cur===0;document.getElementById('nextBtn').disabled=cur===slides.length-1;
+  [].forEach.call(dotsEl.children,function(d,i){d.classList.toggle('on',i===cur)})}
+function go(i){cur=Math.max(0,Math.min(slides.length-1,i));beep(520,.09);render()}
+function move(d){go(cur+d);beep(d>0?740:440,.1)}
+document.addEventListener('keydown',function(e){if(e.key==='ArrowRight')move(1);if(e.key==='ArrowLeft')move(-1)});
+var txX=null;document.addEventListener('touchstart',function(e){txX=e.touches[0].clientX},{passive:true});
+document.addEventListener('touchend',function(e){if(txX===null)return;var dx=e.changedTouches[0].clientX-txX;var ae=document.activeElement;if(Math.abs(dx)>70&&(!ae||ae.tagName!=='INPUT'))move(dx<0?1:-1);txX=null},{passive:true});
+render();
+
+/* interactive content */
+var TX=[
+ ["1 · Begin","BEGIN TRANSACTION — the DBMS starts tracking everything. From here, FoodFlow's checkout is one unit: cart check, stock, order, items and payment will live or die together."],
+ ["2 · Validate","The server checks: does this cart belong to this customer? Does it mix two restaurants? FoodFlow enforces one restaurant per cart — and every food item must still be available. Any failure here ends the transaction before a single rupee moves."],
+ ["3 · Recalculate","Prices, tax, delivery fee and coupon discount are recomputed on the server from the database. The browser's total is never trusted — change it in dev tools and it makes no difference."],
+ ["4 · Reserve stock","A conditional update — UPDATE Inventory SET stock = stock − qty WHERE stock >= qty. If it affects 0 rows, someone else took the last piece first, and the whole order rolls back cleanly."],
+ ["5 · Create order + payment","The order, its items (with the name and price frozen as snapshots) and the payment record are inserted together. Payments are simulated for this academic project — UPI / card are labelled SIM- and no real card data is ever stored. Cash on Delivery is also supported."],
+ ["6 · Commit","COMMIT — every change becomes permanent at the same instant, a notification is saved, and the restaurant sees the order. If anything above had failed: ROLLBACK, and the database looks exactly as if checkout never happened."]];
+function txShow(i,btn){sel('txTabs',btn);var d=document.getElementById('txDetail');d.innerHTML='<h3>'+TX[i][0]+'</h3><p>'+TX[i][1]+'</p>';beep(600+i*60,.09)}
+var ROLES=[
+ ["🧑 Customer","Discovers restaurants with search, category / price / rating filters and sorting · builds a one-restaurant cart · checks out with saved addresses and coupons · tracks the order through all 7 states · leaves reviews and favourites."],
+ ["👨‍🍳 Restaurant Admin","Runs one restaurant: menu & category CRUD, prices and availability, inventory with low-stock alerts and stock history, incoming orders (accept → preparing → ready for pickup), and revenue analytics drawn from real orders."],
+ ["🛵 Delivery Partner","Sees assigned deliveries and claims them, then confirms pickup → out for delivery → delivered, with assignment, pickup and delivery timestamps recorded. Invalid jumps (like Delivered before Pickup) are rejected, and an availability toggle controls new assignments."],
+ ["🛡️ Super Admin","The whole platform: total customers, restaurants, partners, orders, gross order value and successful payments — plus user / restaurant / order / payment / coupon management, audit logs, and charts for daily orders, monthly revenue and popular categories, all from live queries."]];
+function roleShow(i,btn){sel('roleTabs',btn);var d=document.getElementById('roleDetail');d.innerHTML='<h3>'+ROLES[i][0]+'</h3><p>'+ROLES[i][1]+'</p>';beep(600+i*60,.09)}
+var ACID=[
+ ["A · Atomicity — all or nothing","Checkout's order, order items, payment and stock update are one transaction. In the demo, when the payment step fails after stock was reserved, the reservation is rolled back too — stock returns to exactly 1."],
+ ["C · Consistency — rules always hold","Constraints keep the database valid: foreign keys stop an order pointing at a deleted restaurant, CHECK constraints reject negative prices and stock, UNIQUE stops duplicate emails — and totals always equal the sum of their items."],
+ ["I · Isolation — users don't trip over each other","Two customers checking out at the same moment don't see each other's half-finished orders. InnoDB row locks and conditional updates serialise the fight for the last item — one wins, one gets a clean error."],
+ ["D · Durability — committed means committed","Once COMMIT returns, the order survives a crash or power cut. InnoDB writes it to the redo log on disk — restart MySQL and the committed order is still there, while anything uncommitted is undone."]];
+function acidShow(i,btn){sel('acidTabs',btn);var d=document.getElementById('acidDetail');d.innerHTML='<h3>'+ACID[i][0]+'</h3><p>'+ACID[i][1]+'</p>';beep(600+i*60,.09)}
+function sel(id,btn){[].forEach.call(document.getElementById(id).children,function(b){b.classList.remove('sel')});btn.classList.add('sel')}
+txShow(0,document.querySelector('#txTabs .tap'));roleShow(0,document.querySelector('#roleTabs .tap'));acidShow(0,document.querySelector('#acidTabs .tap'));
+
+/* order simulator */
+var stock=1,busy=false;
+function setSim(s){document.getElementById('stockLabel').textContent=stock;document.getElementById('stockBar').style.width=(stock*20)+'%';
+ document.getElementById('simOrder').textContent=s.order;document.getElementById('simPay').textContent=s.pay;document.getElementById('simState').textContent=s.state}
+function resetSim(){stock=1;busy=false;setSim({order:'Not placed',pay:'—',state:'Not started'});document.getElementById('simLog').textContent='· Transaction log will appear here, step by step…';beep(500,.09)}
+function runOrder(fail){if(busy)return;if(stock===0&&!fail){document.getElementById('simLog').innerHTML='<span class="warn">Stock is 0 — the dish is sold out. Press Reset to restock and run the failure demo.</span>';beep(220,.2,'square');return}
+ busy=true;var log=document.getElementById('simLog');log.innerHTML='';
+ var steps=[
+  ['BEGIN TRANSACTION;','Active',null,500],
+  ['Validating cart… customer ✓ · one restaurant ✓ · item available ✓','Active',null,750],
+  ['Server recalculated total: ₹349 + ₹29 delivery + tax − ₹0 coupon','Active',null,750],
+  ['UPDATE Inventory SET stock = stock − 1 WHERE stock >= 1;  → 1 row affected, stock now 0','Active',function(){stock=0;setSim({order:'Creating…',pay:'Pending',state:'Active'})},900],
+  [fail?'INSERT Payments … → ✕ SIMULATED UPI FAILED (bank timeout)':'INSERT Orders + Order_Items (price snapshot ₹349) ✓','Active',null,850],
+  [fail?'Payment failed — aborting the whole transaction…':'INSERT Payments (UPI_SIMULATED, SUCCESS, SIM-8842) ✓','Partially Committed',null,800],
+  [fail?'ROLLBACK;  → stock restored to 1, no order row, no payment row':'COMMIT;  → order, payment & stock saved together, permanently',fail?'Aborted':'Committed',null,800],
+  [fail?'RESULT: Nothing happened — and that is exactly right. All or nothing.':'RESULT: Order #31 Placed → restaurant notified. Consistency holds.',fail?'Aborted':'Committed',null,300]];
+ var t=0;steps.forEach(function(st,i){t+=st[3];setTimeout(function(){
+   var span=document.createElement('span');span.className=fail&&i>=4?'bad':(i===steps.length-1?(fail?'bad':'ok'):'');
+   span.textContent=(i+1)+'. '+st[0]+'\n';log.appendChild(span);if(st[2])st[2]();
+   setSim({order:fail?(i>=6?'Rolled back — no order':'Creating…'):(i>=6?'Placed ✓':'Creating…'),pay:fail?(i>=5?'Failed → rolled back':'Pending'):(i>=5?'SUCCESS · SIM-8842':'Pending'),state:st[1]});
+   beep(fail&&i>=4?240:660+i*30,.09,i>=4&&fail?'square':'sine');
+   if(i===steps.length-1){busy=false;if(fail){stock=1;setSim({order:'Rolled back — no order',pay:'Failed → rolled back',state:'Aborted → Terminated'})}}
+ },t)})}
+function quiz(el,ok){var m=document.getElementById('quizMsg');if(ok){m.textContent='✓ Correct! Atomicity — the transaction is one unit, so a failed step undoes every step.';m.style.color='#4ade80';beep(880,.15);setTimeout(function(){beep(1174,.18)},140)}else{m.textContent='✕ Not quite — think "all or nothing". Try again.';m.style.color='#fb7185';beep(220,.18,'square')}}
+
+/* ---- Working Page 1: Cart ---- */
+var cart={},cartRest=null,couponApplied=false;
+function cartTotals(){var sub=0;for(var k in cart)sub+=cart[k].price*cart[k].qty;var del=sub?29:0;var disc=couponApplied?Math.round(sub*0.10):0;var tax=Math.round((sub-disc)*0.05);return{sub:sub,del:del,disc:disc,tax:tax,total:sub+del+tax-disc}}
+function renderCart(){var box=document.getElementById('cartItems');var keys=Object.keys(cart);
+ document.getElementById('cartRest').textContent=cartRest?('· '+cartRest):'';
+ if(!keys.length){box.innerHTML='<p style="color:var(--muted)">Cart is empty — add a dish to start.</p>'}
+ else{box.innerHTML=keys.map(function(k){var it=cart[k];return '<div class="kv"><span>'+k+' — ₹'+it.price+'</span><span><button class="smallbtn" data-dec="'+k+'">−</button> <b>'+it.qty+'</b> <button class="smallbtn" data-inc="'+k+'">+</button> &nbsp;₹'+(it.price*it.qty)+'</span></div>'}).join('');
+  [].forEach.call(box.querySelectorAll('[data-inc]'),function(b){b.addEventListener('click',function(){cart[b.getAttribute('data-inc')].qty++;renderCart()})});
+  [].forEach.call(box.querySelectorAll('[data-dec]'),function(b){b.addEventListener('click',function(){var k=b.getAttribute('data-dec');cart[k].qty--;if(cart[k].qty<=0)delete cart[k];if(!Object.keys(cart).length)cartRest=null;renderCart()})});}
+ var t=cartTotals();document.getElementById('ctSub').textContent='₹'+t.sub;document.getElementById('ctDel').textContent='₹'+t.del;document.getElementById('ctTax').textContent='₹'+t.tax;document.getElementById('ctDisc').textContent='− ₹'+t.disc;document.getElementById('ctTotal').textContent='₹'+t.total}
+[].forEach.call(document.querySelectorAll('[data-add]'),function(b){b.addEventListener('click',function(){var p=b.getAttribute('data-add').split('|');var name=p[0],price=+p[1],rest=p[2];var msg=document.getElementById('cartMsg');
+ if(cartRest&&cartRest!==rest&&Object.keys(cart).length){msg.textContent='⚠ One-restaurant rule: your cart has '+cartRest+'. Clear the cart first to order from '+rest+'. (Enforced server-side in the real app.)';msg.style.color='#fb7185';beep(220,.18,'square');return}
+ cartRest=rest;if(cart[name])cart[name].qty++;else cart[name]={price:price,qty:1};msg.textContent='✓ Added '+name+' from '+rest;msg.style.color='#4ade80';beep(760,.09);renderCart()})});
+function applyCoupon(){var v=document.getElementById('couponInput').value.trim().toUpperCase();var msg=document.getElementById('cartMsg');if(v==='WELCOME10'){couponApplied=true;msg.textContent='✓ WELCOME10 applied — 10% off, recorded in Coupon_Usage.';msg.style.color='#4ade80';beep(880,.12)}else{msg.textContent='✕ That coupon is not valid. Try WELCOME10.';msg.style.color='#fb7185';beep(220,.15,'square')}renderCart()}
+function clearCart(){cart={};cartRest=null;couponApplied=false;document.getElementById('cartMsg').textContent='Cart cleared.';renderCart()}
+renderCart();
+
+/* ---- Working Page 2: Checkout & Tracking ---- */
+var trackTimer=null,trackStep=-1;
+var TRACKSTATES=['Placed','Confirmed','Preparing','Ready for Pickup','Picked Up','Out for Delivery','Delivered'];
+function renderTrack(){[].forEach.call(document.getElementById('trackSteps').children,function(el,i){el.className='trackstep'+(i<trackStep?' done':i===trackStep?' now':'')})}
+function placeTracked(){if(trackTimer)clearInterval(trackTimer);trackStep=0;document.getElementById('trackOrderId').textContent='#34';renderTrack();
+ var log=document.getElementById('trackLog');log.innerHTML='';document.getElementById('trackMsg').textContent='✓ Order #34 placed — transaction COMMITTED. Payment & order saved together.';document.getElementById('trackMsg').style.color='#4ade80';
+ function addLog(){var s=document.createElement('span');s.className='ok';s.textContent='→ Order_Status_History: '+TRACKSTATES[trackStep]+' · just now\n';log.appendChild(s)}
+ addLog();beep(880,.12);
+ trackTimer=setInterval(function(){trackStep++;if(trackStep>=TRACKSTATES.length){clearInterval(trackTimer);trackTimer=null;document.getElementById('trackMsg').textContent='🎉 Delivered! Review & favourite options now appear in the customer profile.';return}renderTrack();addLog();beep(660+trackStep*40,.09)},1300)}
+function resetTrack(){if(trackTimer)clearInterval(trackTimer);trackTimer=null;trackStep=-1;document.getElementById('trackOrderId').textContent='#—';renderTrack();document.getElementById('trackLog').textContent='Place the order to see status-history rows being written…';document.getElementById('trackMsg').textContent=''}
+
+/* ---- Working Page 3: Kitchen + Inventory ---- */
+var inv=[{name:'Paneer (kg)',stock:2},{name:'Chicken (kg)',stock:14},{name:'Basmati rice (kg)',stock:22},{name:'Dosa batter (L)',stock:9}];
+var kitchenDone=0,kitchenRev=0;
+function renderInv(){var box=document.getElementById('invList');box.innerHTML=inv.map(function(it,i){var low=it.stock<3;return '<div class="kv"><span>'+it.name+(low?' <b style="color:#fb7185">· LOW</b>':'')+'</span><span><button class="smallbtn" data-invdec="'+i+'">−</button> <b>'+it.stock+'</b> <button class="smallbtn" data-invinc="'+i+'">+ Restock</button></span></div>'}).join('');
+ [].forEach.call(box.querySelectorAll('[data-invinc]'),function(b){b.addEventListener('click',function(){inv[+b.getAttribute('data-invinc')].stock+=5;renderInv();updateLow()})});
+ [].forEach.call(box.querySelectorAll('[data-invdec]'),function(b){b.addEventListener('click',function(){var i=+b.getAttribute('data-invdec');if(inv[i].stock>0)inv[i].stock--;renderInv();updateLow()})});updateLow()}
+function updateLow(){var low=inv.filter(function(x){return x.stock<3});document.getElementById('kitchenLow').textContent=low.length?(low.length+' item'+(low.length>1?'s':'')):'None';document.getElementById('invMsg').textContent=low.length?('⚠ Low stock: '+low.map(function(x){return x.name}).join(', ')+' — restock soon.'):'✓ All stock levels healthy.'}
+renderInv();
+[].forEach.call(document.querySelectorAll('[data-kitchen]'),function(card){var status=card.querySelector('.kstatus');var price=card.querySelector('h3').textContent.match(/₹(\d+)/);var amt=price?+price[1]:0;var state=0;
+ [].forEach.call(card.querySelectorAll('[data-kact]'),function(b){b.addEventListener('click',function(){var act=b.getAttribute('data-kact');
+  if(act==='accept'&&state===0){state=1;status.textContent='Confirmed ✓';beep(760,.09)}
+  else if(act==='prep'&&state===1){state=2;status.textContent='Preparing…';beep(700,.09)}
+  else if(act==='ready'&&state===2){state=3;status.textContent='Ready for pickup ✓';kitchenRev+=amt;kitchenDone++;document.getElementById('kitchenRevenue').textContent='₹'+kitchenRev;document.getElementById('kitchenOrders').textContent=Math.max(0,3-kitchenDone);beep(880,.12)}
+  else{status.textContent=status.textContent+' — do the previous step first!';beep(220,.15,'square')}})})});
+
+/* ---- Working Page 4: Delivery ---- */
+var delStep=0,delDoneCount=0,delEarnAmt=0,avail=true;
+function renderDel(){[].forEach.call(document.getElementById('delSteps').children,function(el,i){el.className='trackstep'+(i<delStep?' done':i===delStep?' now':'')});
+ document.getElementById('delAccept').disabled=!(avail&&delStep===0);document.getElementById('delPickup').disabled=delStep!==1;document.getElementById('delOut').disabled=delStep!==2;document.getElementById('delDone').disabled=delStep!==3}
+function delAdvance(n,btn){if(!avail&&n===1){document.getElementById('delMsg').textContent='You are offline — go available first.';return}delStep=n;renderDel();beep(700+n*60,.09);
+ if(n===4){delDoneCount++;delEarnAmt+=60;document.getElementById('delCount').textContent=delDoneCount;document.getElementById('delEarn').textContent='₹'+delEarnAmt;document.getElementById('delHistory').innerHTML='<p style="color:#fff;font-weight:700">Order #31 — Delivered ✓</p><p style="color:var(--muted)">Pickup &amp; delivery timestamps recorded · ₹60 earned</p>';document.getElementById('delMsg').textContent='🎉 Delivered! Customer notified, history updated.';document.getElementById('delMsg').style.color='#4ade80'}}
+function delResetFn(){delStep=0;renderDel();document.getElementById('delMsg').textContent='Reset — ready for a new assignment.'}
+renderDel();
+
+/* ---- Working Page 5: SQL Playground ---- */
+var SQLPRESETS=[
+ {sql:'SELECT item_name, SUM(quantity) AS sold, SUM(quantity*price) AS revenue FROM Order_Items GROUP BY item_name ORDER BY revenue DESC LIMIT 5;',head:['item_name','sold','revenue'],rows:[['Butter Chicken','18','₹7,182'],['Paneer Tikka','15','₹5,235'],['Veg Biryani','12','₹3,348'],['Masala Dosa','20','₹2,980'],['Classic Burger','9','₹1,791']]},
+ {sql:'SELECT r.name, COUNT(o.id) AS orders, SUM(o.total) AS sales FROM Restaurants r JOIN Orders o ON o.restaurant_id=r.id GROUP BY r.name ORDER BY sales DESC;',head:['restaurant','orders','sales'],rows:[['Spice Route','11','₹8,940'],['Burger Barn','7','₹4,120'],['Dosa Junction','6','₹3,310'],['Pizza Point','4','₹2,860'],['Sushi House','2','₹1,940']]},
+ {sql:'SELECT DATE_FORMAT(created_at, "%Y-%m") AS month, SUM(total) AS revenue FROM Orders GROUP BY month;',head:['month','revenue'],rows:[['2026-09','₹6,420'],['2026-10','₹8,150'],['2026-11','₹6,600']]},
+ {sql:'SELECT u.name, COUNT(o.id) AS orders FROM Users u JOIN Orders o ON o.user_id=u.id GROUP BY u.name ORDER BY orders DESC LIMIT 3;',head:['customer','orders'],rows:[['Aarav Sharma','4'],['Priya Nair','3'],['Harshit','3']]}];
+var sqlIdx=0;
+function sqlShow(i,btn){if(btn)sel('sqlTabs',btn);sqlIdx=i;document.getElementById('sqlInput').value=SQLPRESETS[i].sql;beep(620+i*50,.08)}
+function sqlTable(p){return '<table><tr>'+p.head.map(function(h){return '<th>'+h+'</th>'}).join('')+'</tr>'+p.rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+c+'</td>'}).join('')+'</tr>'}).join('')+'</table>'}
+function runSql(custom){var q=document.getElementById('sqlInput').value.trim();var msg=document.getElementById('sqlMsg');var t0=performance.now();
+ if(/delete|update|insert|drop|alter|truncate/i.test(q)){document.getElementById('sqlResult').innerHTML='<p style="color:#fb7185;font-weight:800">✕ Blocked: the playground is read-only. Only SELECT is allowed — enforced server-side with a read-only DB account, row limits &amp; timeouts.</p>';msg.textContent='';beep(220,.2,'square');return}
+ var p=SQLPRESETS[sqlIdx];document.getElementById('sqlResult').innerHTML=sqlTable(p);var ms=Math.max(2,Math.round(performance.now()-t0)+3);msg.textContent='✓ '+p.rows.length+' rows returned in '+ms+' ms · from food_ordering_db (seeded data shape)';msg.style.color='#4ade80';beep(880,.1)}
+function tryDelete(){document.getElementById('sqlInput').value='DELETE FROM Orders WHERE id = 31;';runSql(true)}
+
+/* ---- Working Page 6: Race ---- */
+var raceDone=false;
+function runRace(){if(raceDone)return;raceDone=true;document.getElementById('raceA').textContent='Ordering… UPDATE … WHERE stock >= 1';document.getElementById('raceB').textContent='Ordering… UPDATE … WHERE stock >= 1';beep(600,.1);
+ setTimeout(function(){document.getElementById('raceStock').textContent='0';document.getElementById('raceBar').style.width='0%';
+  var aWins=Math.random()<0.5;var win=aWins?'A':'B',lose=aWins?'B':'A';
+  document.getElementById('race'+win).innerHTML='<span style="color:#4ade80">✓ Won! 1 row affected — order COMMITTED</span>';
+  document.getElementById('race'+lose).innerHTML='<span style="color:#fb7185">✕ 0 rows affected — “Out of stock”, clean rollback</span>';
+  document.getElementById('raceMsg').textContent='Result: exactly one order succeeded. No overselling — that is Isolation + the conditional update working together.';document.getElementById('raceMsg').style.color='#4ade80';beep(880,.15)},900)}
+function resetRace(){raceDone=false;document.getElementById('raceStock').textContent='1';document.getElementById('raceBar').style.width='20%';document.getElementById('raceA').textContent='Waiting to order…';document.getElementById('raceB').textContent='Waiting to order…';document.getElementById('raceMsg').textContent=''}
+
+/* ---- Working Page 7: Super Admin ---- */
+var ADMORDERS=[
+ {id:31,cust:'Harshit',rest:'Spice Route',total:349,status:'Preparing'},
+ {id:30,cust:'Aarav Sharma',rest:'Burger Barn',total:398,status:'Delivered'},
+ {id:29,cust:'Priya Nair',rest:'Spice Route',total:798,status:'Delivered'},
+ {id:28,cust:'Rohan Mehta',rest:'Dosa Junction',total:149,status:'Delivered'},
+ {id:27,cust:'Sneha Rao',rest:'Pizza Point',total:549,status:'Cancelled'},
+ {id:26,cust:'Harshit',rest:'Dosa Junction',total:298,status:'Delivered'},
+ {id:25,cust:'Kiran Patil',rest:'Sushi House',total:899,status:'Preparing'},
+ {id:24,cust:'Ananya Iyer',rest:'Burger Barn',total:199,status:'Delivered'}];
+var admFilter='all';
+function renderAdm(){var q=(document.getElementById('admSearch').value||'').toLowerCase();
+ var rows=ADMORDERS.filter(function(o){return (admFilter==='all'||o.status===admFilter)&&(!q||o.cust.toLowerCase().indexOf(q)>-1||o.rest.toLowerCase().indexOf(q)>-1||('#'+o.id).indexOf(q)>-1)});
+ document.getElementById('admOrderCount').textContent=rows.length;
+ document.getElementById('admTable').innerHTML=rows.length?rows.map(function(o){return '<tr><td>#'+o.id+'</td><td>'+o.cust+'</td><td>'+o.rest+'</td><td>₹'+o.total+'</td><td>'+o.status+'</td></tr>'}).join(''):'<tr><td colspan="5">No orders match — try a different search or filter.</td></tr>'}
+var ADMBARS=[['Mon',3],['Tue',5],['Wed',4],['Thu',6],['Fri',8],['Sat',7],['Sun',5]];
+function renderAdmBars(){document.getElementById('admBars').innerHTML=ADMBARS.map(function(d,i){return '<div class="barcol"><button class="bar'+(i>=4?' alt':'')+'" data-barday="'+i+'" style="height:'+(d[1]*16)+'px" aria-label="'+d[0]+' '+d[1]+' orders"></button><span class="barlbl">'+d[0]+'<br>'+d[1]+'</span></div>'}).join('');
+ [].forEach.call(document.querySelectorAll('[data-barday]'),function(b){b.addEventListener('click',function(){var d=ADMBARS[+b.getAttribute('data-barday')];document.getElementById('admBarMsg').textContent='📊 '+d[0]+': '+d[1]+' orders · approx ₹'+(d[1]*612)+' revenue — SELECT COUNT(*), SUM(total) FROM Orders GROUP BY DATE(created_at).';beep(700+ +b.getAttribute('data-barday')*40,.09)})})}
+renderAdmBars();
+
+/* ---- Working Page 8: Table Explorer ---- */
+var TABLES=[
+ {name:'Users',meta:'<h3>Users — 43 rows</h3><p><b style="color:#fff">PK:</b> id · <b style="color:#fff">UNIQUE:</b> email · Columns: id, name, email, role, created_at. Role is checked server-side on every protected route.</p>',head:['id','name','email','role'],rows:[[1,'Harshit','harshit@foodflow.in','CUSTOMER'],[2,'Aarav Sharma','aarav@example.com','CUSTOMER'],[3,'Spice Route Owner','restaurant@foodflow.in','RESTAURANT_ADMIN'],[4,'Ravi Kumar','delivery@foodflow.in','DELIVERY_PARTNER'],[5,'Platform Admin','admin@foodflow.in','SUPER_ADMIN'],[6,'Priya Nair','priya@example.com','CUSTOMER'],[7,'Rohan Mehta','rohan@example.com','CUSTOMER'],[8,'Sneha Rao','sneha@example.com','CUSTOMER']]},
+ {name:'Orders',meta:'<h3>Orders — 30 rows</h3><p><b style="color:#fff">PK:</b> id · <b style="color:#fff">FK:</b> user_id → Users, restaurant_id → Restaurants · Totals are server-calculated; status follows the validated 7-state lifecycle.</p>',head:['id','user_id','restaurant_id','total','status'],rows:[[31,1,1,349,'PREPARING'],[30,2,3,398,'DELIVERED'],[29,6,1,798,'DELIVERED'],[28,7,2,149,'DELIVERED'],[27,8,4,549,'CANCELLED'],[26,1,2,298,'DELIVERED'],[25,9,5,899,'PREPARING'],[24,10,3,199,'DELIVERED']]},
+ {name:'Food_Items',meta:'<h3>Food_Items — 50 rows</h3><p><b style="color:#fff">PK:</b> id · <b style="color:#fff">FK:</b> restaurant_id, category_id · CHECK (price &gt; 0). Order items snapshot name + price so history survives menu edits.</p>',head:['id','name','price','restaurant_id','available'],rows:[[12,'Paneer Tikka',349,1,'YES'],[13,'Butter Chicken',399,1,'YES'],[14,'Veg Biryani',279,1,'YES'],[21,'Masala Dosa',149,2,'YES'],[31,'Classic Burger',199,3,'YES'],[41,'Farmhouse Pizza',449,4,'YES'],[48,'Salmon Nigiri',699,5,'NO'],[49,'Veg Maki Roll',399,5,'YES']]},
+ {name:'Payments',meta:'<h3>Payments — 30 rows</h3><p><b style="color:#fff">PK:</b> id · <b style="color:#fff">FK:</b> order_id → Orders (unique, 1—1) · Simulated methods only — references start with SIM- and no card data is stored.</p>',head:['id','order_id','method','amount','reference'],rows:[[31,31,'UPI_SIMULATED',349,'SIM-8842'],[30,30,'COD',398,'COD-30'],[29,29,'CARD_SIMULATED',798,'SIM-7710'],[28,28,'UPI_SIMULATED',149,'SIM-6601'],[27,27,'UPI_SIMULATED',549,'SIM-FAILED'],[26,26,'COD',298,'COD-26'],[25,25,'CARD_SIMULATED',899,'SIM-9020'],[24,24,'UPI_SIMULATED',199,'SIM-5518']]}];
+var tblIdx=0,tblPage=0,TBLPER=4;
+function renderTbl(){var t=TABLES[tblIdx];document.getElementById('tblMeta').innerHTML=t.meta;
+ var pages=Math.ceil(t.rows.length/TBLPER);tblPage=Math.max(0,Math.min(pages-1,tblPage));var slice=t.rows.slice(tblPage*TBLPER,tblPage*TBLPER+TBLPER);
+ document.getElementById('tblBody').innerHTML='<table><tr>'+t.head.map(function(h){return '<th>'+h+'</th>'}).join('')+'</tr>'+slice.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+c+'</td>'}).join('')+'</tr>'}).join('')+'</table>';
+ document.getElementById('tblPageLbl').textContent='Page '+(tblPage+1)+' / '+pages+' · '+t.name;
+ document.getElementById('tblPrev').disabled=tblPage===0;document.getElementById('tblNext').disabled=tblPage>=pages-1}
+function tblShow(i,btn){sel('tblTabs',btn);tblIdx=i;tblPage=0;renderTbl();beep(620+i*50,.08)}
+renderTbl();
+
+/* ---- Working Page 9: Normalisation ---- */
+var NORM=[
+ {t:'✕ Unnormalised — one wide Orders row',d:'Everything stuffed into one row: the customer, the restaurant phone, and a comma-list of dishes. Repeating groups, copied data everywhere — this is where anomalies are born.',tbl:'<table class="normtable"><tr><th>order</th><th>customer</th><th>restaurant + phone</th><th>dishes (list!)</th></tr><tr><td>#31</td><td>Harshit, MG Road, Bengaluru</td><td>Spice Route, 080-4111, MG Road</td><td>Paneer Tikka ₹349, Naan ₹49</td></tr></table>',a:['Restaurant phone stored on every order row — change it in one place, miss it in 29 others.','Can\'t add a new restaurant until someone orders from it first.','Delete the only order for a dish and the dish itself vanishes.']},
+ {t:'1NF — atomic values, no repeating groups',d:'Every cell holds one value. The dish list becomes one row per item — Orders + a separate items list. Comma-lists are gone, so dishes can finally be counted and summed.',tbl:'<table class="normtable"><tr><th>order_id</th><th>item</th><th>qty</th><th>price</th></tr><tr><td>31</td><td>Paneer Tikka</td><td>1</td><td>349</td></tr><tr><td>31</td><td>Naan</td><td>2</td><td>49</td></tr><tr><td>32</td><td>Butter Chicken</td><td>2</td><td>399</td></tr></table>',a:['Still copied: restaurant phone repeats on every order.','Still can\'t add a restaurant with no orders.','Deleting order #32 still risks losing Butter Chicken\'s details.']},
+ {t:'2NF — no partial dependencies',d:'Item details depend on the item alone, not on (order + item) together. Food_Items becomes its own table; Order_Items keeps only order_id, food_item_id, quantity and the price snapshot.',tbl:'<table class="normtable"><tr><th>Food_Items: id</th><th>name</th><th>price</th><th>category</th></tr><tr><td>12</td><td>Paneer Tikka</td><td>349</td><td>Starters</td></tr><tr><td>13</td><td>Butter Chicken</td><td>399</td><td>Mains</td></tr></table><p style="color:var(--muted);margin-top:8px">Order_Items: (order_id, food_item_id, qty, price_snapshot) — composite key, facts about the whole key only.</p>',a:['Dish facts now live once — update a price in one row.','A dish can exist before anyone orders it ✓','Deleting an order no longer deletes the dish ✓','Restaurant phone still travels with the order — one step left.']},
+ {t:'3NF ✓ — no transitive dependencies',d:'Restaurant details depend on restaurant_id — so they live only in Restaurants. Customer details live only in Users. Orders keep just the foreign keys. This is FoodFlow\'s real schema: one fact, one place.',tbl:'<table class="normtable"><tr><th>Orders: id</th><th>user_id → Users</th><th>restaurant_id → Restaurants</th><th>total</th></tr><tr><td>31</td><td>1</td><td>1</td><td>₹447</td></tr><tr><td>32</td><td>6</td><td>1</td><td>₹798</td></tr></table><p style="color:var(--muted);margin-top:8px">Restaurants: (id, name, phone, address) — stored exactly once, joined when needed.</p>',a:['✓ Phone changed once, correct everywhere.','✓ Restaurants and dishes exist independently.','✓ Deleting an order deletes only the order.']}];
+function normShow(i,btn){sel('normTabs',btn);var n=NORM[i];document.getElementById('normDetail').innerHTML='<h3>'+n.t+'</h3><p>'+n.d+'</p>';document.getElementById('normTable').innerHTML=n.tbl;
+ document.getElementById('normAnom1').textContent=n.a[0];document.getElementById('normAnom2').textContent=n.a[1];document.getElementById('normAnom3').textContent=n.a[2];beep(600+i*70,.09)}
+normShow(0,document.querySelector('#normTabs .tap'));
+
+/* ---- Working Page 10: SAVEPOINT Lab ---- */
+var spStep=0,spStockVal=5;
+function spLogLine(txt,cls){var log=document.getElementById('spLog');if(log.textContent.indexOf('SQL will appear')===0)log.innerHTML='';var s=document.createElement('span');if(cls)s.className=cls;s.textContent=txt+'\n';log.appendChild(s)}
+function spRender(){document.getElementById('spStock').textContent=spStockVal}
+function spBeginFn(){if(spStep!==0){document.getElementById('spMsg').textContent='Already started — Reset to run it again.';return}spStep=1;document.getElementById('spState').textContent='Active';spLogLine('BEGIN TRANSACTION;');document.getElementById('spMsg').textContent='Transaction open. Now create the order and set the savepoint.';beep(660,.09)}
+function spSaveFn(){if(spStep!==1){document.getElementById('spMsg').textContent='Press BEGIN first.';beep(220,.15,'square');return}spStep=2;spStockVal=4;spRender();document.getElementById('spOrder').textContent='Order #35 created';spLogLine('INSERT INTO Orders ...;  UPDATE Inventory SET stock = stock - 1;  → stock 5 → 4','ok');spLogLine('SAVEPOINT order_created;','warn');document.getElementById('spMsg').textContent='✓ Order work is done and protected by the savepoint. Now try the risky part.';beep(760,.09)}
+function spRiskFn(){if(spStep!==2){document.getElementById('spMsg').textContent='Create the order + savepoint first.';beep(220,.15,'square');return}spStep=3;document.getElementById('spCoupon').textContent='WELCOME10 applied';document.getElementById('spPay').textContent='FAILED ✕ (simulated)';spLogLine('UPDATE Orders SET coupon = \'WELCOME10\';');spLogLine('INSERT Payments ... → ✕ SIMULATED FAILURE','bad');document.getElementById('spMsg').textContent='⚠ The payment step failed. Full ROLLBACK would lose the order too — or roll back only to the savepoint…';document.getElementById('spMsg').style.color='#facc15';beep(240,.18,'square')}
+function spRollbackFn(){if(spStep!==3){document.getElementById('spMsg').textContent='Nothing risky to undo yet — run step 3 first.';beep(220,.15,'square');return}spStep=4;document.getElementById('spCoupon').textContent='— (undone)';document.getElementById('spPay').textContent='— (undone)';spLogLine('ROLLBACK TO SAVEPOINT order_created;','warn');spLogLine('→ coupon + failed payment undone. Order row and stock (4) SURVIVE.','ok');document.getElementById('spMsg').textContent='✓ Rolled back to the savepoint only. The order is intact — now commit it (customer can pay by COD instead).';document.getElementById('spMsg').style.color='#4ade80';beep(760,.1)}
+function spCommitFn(){if(spStep!==4&&spStep!==2){document.getElementById('spMsg').textContent='Commit is available after the savepoint step — follow the steps in order.';beep(220,.15,'square');return}spStep=5;document.getElementById('spState').textContent='Committed ✓';if(spStep===5&&document.getElementById('spPay').textContent==='— (undone)')document.getElementById('spPay').textContent='COD — pay on delivery';spLogLine('COMMIT;  → order #35 is permanent, stock stays 4.','ok');document.getElementById('spMsg').textContent='🎉 COMMITTED — the good half survived, the bad half was undone. That is exactly what a savepoint is for.';document.getElementById('spMsg').style.color='#4ade80';beep(880,.14)}
+function spResetFn(){spStep=0;spStockVal=5;spRender();document.getElementById('spState').textContent='Not started';document.getElementById('spOrder').textContent='—';document.getElementById('spCoupon').textContent='—';document.getElementById('spPay').textContent='—';document.getElementById('spLog').textContent='SQL will appear here as you drive the transaction…';document.getElementById('spMsg').textContent=''}
+
+/* ---- Working Page 11: Favourites & Reviews ---- */
+var favs={},myStars=0,reviewData={'Paneer Tikka':{avg:4.6,cnt:15},'Butter Chicken':{avg:4.8,cnt:18},'Masala Dosa':{avg:4.7,cnt:20},'Veg Biryani':{avg:4.5,cnt:12}};
+function renderFavs(){var names=Object.keys(favs);document.getElementById('favCount').textContent=names.length;
+ document.getElementById('favList').innerHTML=names.length?names.map(function(n){return '<p style="color:#fff;font-weight:700;margin:4px 0">❤️ '+n+'</p>'}).join(''):'<p style="color:var(--muted)">None yet — tap ♡ Save on a dish.</p>'}
+function setStars(n){myStars=n;[].forEach.call(document.querySelectorAll('#starRow .starbtn'),function(b,i){b.classList.toggle('lit',i<n)});document.getElementById('starLbl').textContent=n?('Your rating: '+n+' / 5'):'Tap a star rating';beep(600+n*60,.07)}
+function submitReview(){var msg=document.getElementById('reviewMsg');var txt=document.getElementById('reviewText').value.trim();
+ if(!myStars){msg.textContent='✕ Pick a star rating first.';msg.style.color='#fb7185';beep(220,.15,'square');return}
+ if(!txt){msg.textContent='✕ Write a short review first.';msg.style.color='#fb7185';beep(220,.15,'square');return}
+ var d=reviewData['Veg Biryani'];var newAvg=((d.avg*d.cnt)+myStars)/(d.cnt+1);d.cnt++;d.avg=Math.round(newAvg*10)/10;
+ var stars='★★★★★'.slice(0,myStars)+'☆☆☆☆☆'.slice(0,5-myStars);
+ var p=document.createElement('p');p.style.cssText='color:var(--muted);line-height:1.6';p.innerHTML='<b style="color:#fff">Harshit '+stars+'</b> — “'+txt.replace(/</g,'&lt;')+'” · Veg Biryani average is now '+d.avg+' ('+d.cnt+' reviews)';
+ document.getElementById('reviewList').prepend(p);
+ msg.textContent='✓ Review saved to Reviews — INSERT INTO Reviews (user_id, food_item_id, rating, comment)…';msg.style.color='#4ade80';beep(880,.12)}
+
+/* ---- Working Page 12: Notifications ---- */
+var NOTIFS={order:['🛎','New order #35 placed','Spice Route received a new order — Paneer Tikka ×1, ₹349. (Restaurant notified)'],accept:['👨‍🍳','Order accepted','Spice Route confirmed Order #35 and started preparing. (Customer notified)'],pickup:['🛵','Picked up','Delivery partner Ravi picked up Order #35 — pickup timestamp recorded.'],delivered:['🎉','Delivered','Order #35 delivered. Review & favourite prompts are now available.'],payment:['💳','Payment confirmed','Simulated UPI payment SUCCESS · SIM-9031 — no real money moved.']};
+var notifTotalCount=1,notifUnreadCount=0;
+function notifStats(){document.getElementById('notifTotal').textContent=notifTotalCount;document.getElementById('notifUnreadStat').textContent=notifUnreadCount;document.getElementById('notifBadge').textContent=notifUnreadCount+' unread'}
+function fireNotif(key){var n=NOTIFS[key];var div=document.createElement('div');div.className='notif unread';div.innerHTML='<div style="font-size:1.4rem">'+n[0]+'</div><div><b>'+n[1]+'</b><p>'+n[2]+'</p></div>';var feed=document.getElementById('notifFeed');feed.prepend(div);notifTotalCount++;notifUnreadCount++;notifStats();beep(920,.1);setTimeout(function(){beep(1174,.1)},110)}
+function notifReadFn(){[].forEach.call(document.querySelectorAll('#notifFeed .notif'),function(el){el.classList.remove('unread')});notifUnreadCount=0;notifStats();beep(700,.08)}
+function notifClearFn(){document.getElementById('notifFeed').innerHTML='<div class="notif"><div style="font-size:1.4rem">🗑️</div><div><b>Feed cleared</b><p>Fire an event above to create a new persisted notification.</p></div></div>';notifTotalCount=1;notifUnreadCount=0;notifStats()}
+
+/* All controls are bound here in the script — no inline onclick attributes,
+   so every button keeps working in webviews that block inline handlers. */
+function bindTap(id,fn){var el=document.getElementById(id);if(el)el.addEventListener('click',fn)}
+bindTap('soundBtn',toggleSound);
+bindTap('startBtn',function(){go(1)});
+bindTap('prevBtn',function(){move(-1)});
+bindTap('nextBtn',function(){move(1)});
+bindTap('restartBtn',function(){go(0)});
+bindTap('simNormal',function(){runOrder(false)});
+bindTap('simFail',function(){runOrder(true)});
+bindTap('simReset',function(){resetSim()});
+function bindTabs(boxId,fn){var box=document.getElementById(boxId);if(!box)return;[].forEach.call(box.querySelectorAll('.tap'),function(b,i){b.addEventListener('click',function(){fn(i,b)})})}
+bindTabs('txTabs',txShow);bindTabs('roleTabs',roleShow);bindTabs('acidTabs',acidShow);
+bindTap('couponBtn',applyCoupon);bindTap('clearCartBtn',clearCart);
+bindTap('trackPlaceBtn',placeTracked);bindTap('trackResetBtn',resetTrack);
+bindTap('sqlRun',function(){runSql(false)});bindTap('sqlTryDelete',tryDelete);bindTabs('sqlTabs',sqlShow);
+bindTap('raceRun',runRace);bindTap('raceReset',resetRace);
+bindTap('delAccept',function(){delAdvance(1)});bindTap('delPickup',function(){delAdvance(2)});bindTap('delOut',function(){delAdvance(3)});bindTap('delDone',function(){delAdvance(4)});bindTap('delReset',delResetFn);
+bindTap('availBtn',function(){avail=!avail;var b=document.getElementById('availBtn');b.classList.toggle('on',avail);b.firstChild.textContent=avail?'Available for deliveries ':'Offline — not accepting ';document.getElementById('delMsg').textContent=avail?'You are online. New assignments can arrive.':'You are offline. Accept is disabled until you go available.';renderDel();beep(avail?760:300,.1)});
+[].forEach.call(document.querySelectorAll('input[name="q1"]'),function(r){r.addEventListener('click',function(){quiz(r,r.getAttribute('data-ok')==='1')})});
+/* new working pages bindings */
+var admSearchEl=document.getElementById('admSearch');if(admSearchEl)admSearchEl.addEventListener('input',renderAdm);
+[].forEach.call(document.querySelectorAll('[data-admfilter]'),function(b){b.addEventListener('click',function(){admFilter=b.getAttribute('data-admfilter');[].forEach.call(document.querySelectorAll('[data-admfilter]'),function(x){x.classList.remove('primary')});b.classList.add('primary');renderAdm();beep(680,.08)})});
+bindTabs('tblTabs',tblShow);bindTap('tblPrev',function(){tblPage--;renderTbl()});bindTap('tblNext',function(){tblPage++;renderTbl()});
+bindTabs('normTabs',normShow);
+bindTap('spBegin',spBeginFn);bindTap('spSave',spSaveFn);bindTap('spRisk',spRiskFn);bindTap('spRollback',spRollbackFn);bindTap('spCommit',spCommitFn);bindTap('spReset',spResetFn);
+[].forEach.call(document.querySelectorAll('[data-fav]'),function(b){b.addEventListener('click',function(){var n=b.getAttribute('data-fav');if(favs[n]){delete favs[n];b.classList.remove('loved');b.textContent='♡ Save';beep(400,.08)}else{favs[n]=true;b.classList.add('loved');b.textContent='❤️ Saved';beep(880,.1)}renderFavs()})});
+[].forEach.call(document.querySelectorAll('#starRow .starbtn'),function(b){b.addEventListener('click',function(){setStars(+b.getAttribute('data-star'))})});
+bindTap('reviewSubmit',submitReview);
+[].forEach.call(document.querySelectorAll('[data-notif]'),function(b){b.addEventListener('click',function(){fireNotif(b.getAttribute('data-notif'))})});
+bindTap('notifRead',notifReadFn);bindTap('notifClear',notifClearFn);
+</script>
+</body>
+</html>
